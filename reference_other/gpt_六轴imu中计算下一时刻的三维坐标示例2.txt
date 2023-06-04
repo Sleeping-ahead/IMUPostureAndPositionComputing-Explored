@@ -1,0 +1,111 @@
+问：在六轴imu中，已知本时刻的三维坐标、三轴加速度和角速度，且已计算出本时刻的偏航角、滚动角和俯仰角，如何求下一时刻的三维坐标？请用C++写一个示例。
+答：假设已知当前时刻的三维坐标为(x,y,z)，三轴加速度分别为(ax, ay, az)，角速度分别为(wx, wy, wz)，偏航角为yaw，俯仰角为pitch，滚动角为roll。可以通过以下步骤计算下一时刻的三维坐标：
+
+1. 计算当下加速度的模长g
+
+double g = sqrt(ax * ax + ay * ay + az * az);
+
+2. 计算当前姿态下的重力向量
+
+Vector3D gravity(0, 0, g); // 此处假设重力指向z轴负方向
+
+Matrix3D R = rotationMatrix(yaw, pitch, roll); // 获得旋转矩阵
+
+gravity = R * gravity; // 将重力向量按照当前姿态进行旋转
+
+3. 计算当前姿态下的加速度
+
+Vector3D accel(ax, ay, az);
+
+accel = R * accel; // 将加速度按照当前姿态进行旋转
+
+4. 根据加速度和当前速度计算下一时刻的速度
+
+Vector3D currVel = m_velocity + accel * dt; // dt表示时间间隔
+
+5. 根据速度和当前位置计算下一时刻的位置
+
+m_position = m_position + currVel * dt + 0.5 * accel * dt * dt;
+
+下面是完整的示例代码：
+
+class Vector3D {
+public:
+    double x, y, z;
+    Vector3D(double x_ = 0, double y_ = 0, double z_ = 0) : x(x_), y(y_), z(z_) {}
+};
+
+class Matrix3D {
+public:
+    double data[3][3];
+    Matrix3D() { memset(data, 0, sizeof(data)); }
+    double* operator[](int i) { return data[i]; }
+    double const* operator[](int i) const { return data[i]; }
+};
+
+Matrix3D rotationMatrix(double yaw, double pitch, double roll) {
+    Matrix3D R;
+    double cy = cos(yaw), sy = sin(yaw);
+    double cp = cos(pitch), sp = sin(pitch);
+    double cr = cos(roll), sr = sin(roll);
+    R[0][0] = cy * cp;
+    R[0][1] = cy * sp * sr - sy * cr;
+    R[0][2] = cy * sp * cr + sy * sr;
+    R[1][0] = sy * cp;
+    R[1][1] = sy * sp * sr + cy * cr;
+    R[1][2] = sy * sp * cr - cy * sr;
+    R[2][0] = -sp;
+    R[2][1] = cp * sr;
+    R[2][2] = cp * cr;
+    return R;
+}
+
+class IMU {
+public:
+    Vector3D m_position, m_velocity;
+    double m_yaw, m_pitch, m_roll;
+
+    void update(double ax, double ay, double az, double wx, double wy, double wz, double dt) {
+        // 计算当下加速度的模长g
+        double g = sqrt(ax * ax + ay * ay + az * az);
+
+        // 计算当前姿态下的重力向量
+        Vector3D gravity(0, 0, g); // 此处假设重力指向z轴负方向
+        Matrix3D R = rotationMatrix(m_yaw, m_pitch, m_roll); // 获得旋转矩阵
+        gravity = R * gravity; // 将重力向量按照当前姿态进行旋转
+
+        // 计算当前姿态下的加速度
+        Vector3D accel(ax, ay, az);
+        accel = (accel - gravity) * 9.8; // 减去重力得到去重力加速度，并转换为真实加速度（乘9.8）
+
+        // 根据加速度和当前速度计算下一时刻的速度
+        Vector3D currVel = m_velocity + accel * dt; // dt表示时间间隔
+
+        // 根据速度和当前位置计算下一时刻的位置
+        m_position = m_position + currVel * dt + 0.5 * accel * dt * dt;
+
+        // 根据角速度更新姿态角
+        m_yaw += wx * dt;
+        m_pitch += wy * dt;
+        m_roll += wz * dt;
+    }
+};
+
+int main() {
+    IMU imu;
+    imu.m_position = Vector3D(0, 0, 0);
+    imu.m_velocity = Vector3D(0, 0, 0);
+    imu.m_yaw = 0;
+    imu.m_pitch = 0;
+    imu.m_roll = 0;
+    double ax = 0, ay = 0, az = 9.8; // 此处假设水平放置且静止
+    double wx = 0, wy = 0, wz = 0;
+    double dt = 0.01; // 时间间隔
+    for (int i = 0; i < 1000; ++i) {
+        imu.update(ax, ay, az, wx, wy, wz, dt);
+        // 输出结果
+        printf("x=%.2f, y=%.2f, z=%.2f
+", imu.m_position.x, imu.m_position.y, imu.m_position.z);
+    }
+    return 0;
+}

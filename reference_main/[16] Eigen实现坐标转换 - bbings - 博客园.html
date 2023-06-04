@@ -1,0 +1,668 @@
+<!DOCTYPE html> <html lang=zh-cn style=--olcb-folder-code-block-max-height:80vh;--cnb-code-bg:rgb(245,245,245);--cnb-code-font-size:12px;--cnb-code-color:rgb(68,68,68)><!--
+ Page saved with SingleFile 
+ url: https://www.cnblogs.com/jerry323/p/9097264.html 
+ saved date: Mon May 29 2023 15:59:51 GMT+0800 (中国标准时间)
+--><meta charset=utf-8>
+<meta name=viewport content="width=device-width, initial-scale=1.0">
+<meta name=referrer content=origin-when-cross-origin>
+<meta name=description content="（《视觉SLAM十四讲》第三讲习题7）设有小萝卜一号和二号在世界坐标系中。一号位姿q1 = [0.35, 0.2, 0.3, 0.1]，t1=[0.3, 0.1, 0.1]。二号位姿q2=[ 0.5, 0.4, 0.1, 0.2], t2=[ 0.1, 0.5, 0.3].某点在一号坐标系下坐标为p">
+<meta property=og:description content="（《视觉SLAM十四讲》第三讲习题7）设有小萝卜一号和二号在世界坐标系中。一号位姿q1 = [0.35, 0.2, 0.3, 0.1]，t1=[0.3, 0.1, 0.1]。二号位姿q2=[ 0.5, 0.4, 0.1, 0.2], t2=[ 0.1, 0.5, 0.3].某点在一号坐标系下坐标为p">
+<meta http-equiv=Cache-Control content=no-transform>
+<meta http-equiv=Cache-Control content=no-siteapp>
+<meta http-equiv=X-UA-Compatible content="IE=edge">
+<title>Eigen实现坐标转换 - bbings - 博客园</title>
+<style>#home :not(.cnblogs_code):not(.cnblogs_Highlighter)>pre:not([highlighted]):not([class*="brush:"]) code:not(.hljs),:not(.cnblogs_code):not(.cnblogs_Highlighter)>pre:not([highlighted]):not([class*="brush:"]) code:not(.hljs){background:rgb(245,245,245);padding:12px;border:0.8px solid rgb(204,204,204);border-radius:3px;border-color:transparent;color:rgb(68,68,68);font-family:"Courier New",sans-serif;font-size:12px}.navbar a:hover{color:#666;text-decoration:underline}.navbar a:link,.navbar a:active,.navbar a:visited{color:#666;text-decoration:none}@media screen and (min-width:769px){.dropdown:hover .dropdown-menu.quick-search-menu{max-height:0}.dropdown:hover .dropdown-menu,.dropdown:focus-within .dropdown-menu.quick-search-menu{max-height:1000px;z-index:1000}.dropdown:focus-within .focus-hidden{display:none}}.dropdown>.dropdown-menu{-webkit-transition:all .5s ease,max-height .5s ease;-o-transition:all .5s ease,max-height .5s ease;display:block;-webkit-box-shadow:2px 2px 13px 0 rgba(212,212,212,.5)}.dropdown>.dropdown-menu>*:not(:first-child){margin-top:10px}.dropdown>.dropdown-menu>*:first-child{margin-top:10px}.dropdown>.dropdown-menu>*:last-child{margin-bottom:10px}.navbar{display:flex;flex-direction:column;align-items:center;background-color:#fff;padding-left:40px;padding-right:40px;padding-top:5px;padding-bottom:5px}.navbar>nav{display:flex;font-size:15px;color:#666;flex-direction:row;flex-wrap:nowrap;align-items:center;justify-content:space-between;width:100%}.navbar>nav .navbar-branding{width:140px;flex-shrink:0;margin-right:5px}.navbar>nav .navbar-branding img{display:block;max-height:28px;height:28px;margin-left:10px}.navbar>nav .navbar-left>*:not(:first-child){margin-left:31px}.navbar>nav .navbar-right>*:not(:first-child),.navbar>nav #navbar_login_status>*:not(:first-child){margin-left:24px}.navbar>nav #navbar_login_status{min-width:120px}.navbar>nav .navbar-list{display:flex;flex-direction:row;align-items:center;flex-wrap:nowrap;list-style:none;white-space:nowrap;transition:width .5s ease}.navbar>nav .navbar-search{padding-left:20px;padding-right:20px;display:flex;flex-direction:row;align-items:center;border-radius:6px;background-color:#f4f4f4;height:32px}.navbar>nav .navbar-search:focus-within{border-bottom-left-radius:0;border-bottom-right-radius:0}.navbar>nav .navbar-search img{width:19px;height:19px}.navbar>nav .navbar-search>input{border:none;outline:none;background:none;width:170px;font-size:inherit}.navbar>nav .navbar-search>button{background:none;border:none;cursor:pointer}.navbar>nav .navbar-search>input::-webkit-input-placeholder{color:#afafaf;opacity:1}.navbar>nav .navbar-search>input::placeholder{color:#afafaf;opacity:1}.navbar>nav .navbar-icon-wrapper{position:relative}.navbar-right .dropdown-menu{right:0}.dropdown{display:-ms-inline-flexbox;position:relative}@media screen and (min-width:769px){.dropdown:hover .dropdown-menu,.dropdown:focus-within .dropdown-menu,.dropdown:active .dropdown-menu{max-height:1000px;z-index:1000}}.dropdown>.dropdown-menu.quick-search-menu{left:0;padding-left:0;padding-right:0;border-top-left-radius:0;border-top-right-radius:0}.dropdown>.dropdown-menu.quick-search-menu>*{display:flex;align-items:center;justify-content:space-between}.dropdown>.dropdown-menu.quick-search-menu .search-area{font-size:11px;padding:2px 4px;border-radius:5px;border-style:solid;border-width:1px;border-color:#999}.dropdown>.dropdown-menu.quick-search-menu .keyword-wrapper{display:flex;align-items:center;min-width:0}.dropdown>.dropdown-menu.quick-search-menu .keyword-wrapper img{width:1em;height:1em}.dropdown>.dropdown-menu.quick-search-menu .keyword{min-width:1px;flex-grow:1;overflow-x:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 10px}.dropdown>.dropdown-menu.quick-search-menu>*:first-child{margin-top:0}.dropdown>.dropdown-menu.quick-search-menu>*:not(:first-child){margin-top:0}.dropdown>.dropdown-menu.quick-search-menu>*:last-child{margin-bottom:0;padding-bottom:10px}.dropdown>.dropdown-menu.quick-search-menu>*{margin-top:0;margin-bottom:0;padding:5px 10px}.quick-search-menu>*:hover{background-color:rgba(0,0,0,.01);cursor:pointer}.quick-search-menu>.active{background-color:rgba(0,0,0,.05)}.dropdown>.dropdown-menu{-webkit-transition:all .5s ease,max-height .5s ease;-o-transition:all .5s ease,max-height .5s ease;transition:all .5s ease,max-height .5s ease;max-height:0;overflow:hidden;position:absolute;top:100%;border-radius:5px;min-width:5em;-webkit-box-shadow:2px 2px 13px 0 rgba(212,212,212,.5);box-shadow:2px 2px 13px 0 rgba(212,212,212,.5);background-color:#f9f9f9}.dropdown>.dropdown-menu>*:not(:first-child){margin-top:10px}.dropdown>.dropdown-menu>*:first-child{margin-top:10px}.dropdown>.dropdown-menu>*:last-child{margin-bottom:10px}img{max-width:100%}#blog_post_info_block{margin-top:20px}#BlogPostCategory{margin-bottom:10px}.cnblogs-markdown :not(pre,div,td)>code,.blogpost-body :not(pre,div,td)>code{font-family:"Courier New",sans-serif;font-size:12px;padding:0 5px;line-height:1.8;margin:0 3px;display:inline-block;overflow-x:auto;vertical-align:middle;border-radius:3px;background-color:#f6f6f6;color:#e83e8c}.hljs-engine pre,.hljs-engine pre code{transition-duration:.2s;transition-property:background,font-size,border-color,border-radius,border-width,padding,margin,color}.blogpost-body pre code{line-height:1.5;margin:0;white-space:pre-wrap}pre{overflow:auto}pre{margin-top:0;margin-bottom:0}#author_profile{float:left;width:280px;margin-top:0;margin-bottom:10px;color:#000;margin-left:0;font-size:12px}#author_profile a:hover{text-decoration:underline}.author_avatar{vertical-align:top;float:left;margin-right:5px;padding-top:5px;padding-left:2px;border:0}.author_profile_info{float:left;line-height:18px}#div_digg{float:right;margin-bottom:10px;margin-right:30px;font-size:12px;width:125px;text-align:center;margin-top:10px}.diggit{float:left;width:46px;height:52px;background:url(data:image/gif;base64,R0lGODlhLgA0AMQAAP/00P/22vfqt/b29v/11f/45P/56P/34PjtwfXlqf/55v/11//00v/44vnwyfn5+f/22Pbnrf/21vny0Pn00//33vDw8P/12KioqP/10ufm61B1uv/33f/33P////H4+iH5BAAAAAAALAAAAAAuADQAAAX/oJeMZGmeaJqKQOu+cCzPcxLJmZvlcM4DPlosE4kwMsfdLrlEIo8MZvRJjTKbxaZyy+16v94iYUwum8/odDlDjgjU8Lh8LBAs7mQ8YTHmS/aAfHyBeHeCg3l1dxAQFwsXkBeMjJILEJaNko2bk4+Pl4x3knUBpaanqKmqq6sCCAEdsR2ws6mytbSwprGns766HQgIHByxxR3FxMi3y8nIycTO0MqywtTH0Mu30s/PytLRt9bYxt3Hstzf4eDUsePlzc7bzebr8e3Bw+Tx2uj06t/unct3rVzAeeC8pQtXTR+8bAP/1Qs4beA7bRCZLVT4j6E7hxjNaezIkZ1FkOQO//pLGG0hvosp5a3k17LjSwQVcurcybOnz58/ETg4QLSo0aNIkypV6sBBg6dPC0CdWkBqg6pTs1q1qpWrgwlVw4odS7as2bMTJihYy7at27dw48adQMGA3bt48+rdy5cv3b6AAwu2S8EDhcOIEytezLhxYw+QI0ueTLmy5cuYM2veDPmD58+gQ4seTbq0htIPBqguzbq159OjH2jQgEHDANe4RcMWPUCDBwsYHuQe/pr0bA8PMNwmnnt36N6/lYve8Jk69enVdYdO3ds38OWgr4sPv6G8+fOfndPGwB5DdPAf0J8vjz2+ds8eMFigPEB/aOvjVTfffOl91t96+0X2HYB58REYHmu7JWfZgp7RZ9+FDw4I2m79teebgrVVeGGAD5ZYoGcSVjbBBvCJ52CDDb4Y4Xq1SQYcBSWSaN91Ioa222+0WSDkkBiwmGOPJmJ4ooHsbVDkkw4I6CJ62cV4H2gPFHDABVsWAB9zEIIppnFjlrnhbGimqeaabLbp5mwhAAA7)no-repeat;text-align:center;cursor:pointer;margin-top:2px;padding-top:5px}.diggnum{font-size:14px;color:#075db3;font-family:Verdana}.buryit{float:right;margin-left:20px;width:46px;height:52px;background:url(data:image/gif;base64,R0lGODlhLgA0AMQAAP////39/fn5+fj4+Pb29vX19fPz8/Ly8vHx8fDw8O/v7+7u7u3t7ezs7Ovr6+rq6ujo6Ofn5+bm5uXl5ePj4+Li4uHh4dzc3NfX19HR0c/Pz6qqqqioqKenp4WFhYODgyH5BAQUAP8ALAAAAAAuADQAAAX/IKCNZGmeaJqKUeu+cCzP80jfeN5mGeT/wKBwSCTyisik0sd7OJ/QqHRKpWYw1ax268RgHGDuFkwuO6Res3rNbre9jbh8Tq/b73fMpcHo+xl2f3iDdRcXC4iJiol/jY2LkIh/hpGQjpcMlYuTh5qMmI+ekn6UogugoaKcpqeofqyrpq6vsqSdqrOZtX2luLOwtsC/uwy9nrm6vsW3x7nCy6zR0ogXFgrX2Nna29zd3RYWCeLj5OXm5+jo4Ajs7e7v8PHy8hQUB/f4+fr7/P399QYCChxIsKDBgwcBIlzIsKGBCQAmSJxIsaLFixgxAtjIsaPHjyBDihxJsqTJjQVS8KpcybKly5cwIcCcSbOmSpk2c+pMiZOlAHYOFDhAQGBnzp4rN2z4wIEp0wpGayIFkOABB3MdPBh4+aHrB5pfb64UYJUDBwgdFXCYsNJr2LZu265EKoBDSAoftqp8O5MvX6QFzJpFyzHBWbhuu+5NmVgxz7EcAoA0XHQxS78FMItdedZsgo4HOFRmnNmy3NKoH6sEwAHBxwEcFlxOzZc06b8sIwg2S5WD3tNfa5cOG3xuSwEECPjoPdq2c8uaVb9ES3l25uKmoxcAPBdt3ebB/Tpu6dV4TAChBUSVClOADw4Smq93yX1scvnzWy7Zzz9ICAA7)no-repeat;text-align:center;cursor:pointer;margin-top:2px;padding-top:5px}.burynum{font-size:14px;color:#075db3;font-family:Verdana}.diggword{margin-top:5px;margin-left:0;font-size:12px;color:#808080}#post_next_prev{line-height:1.8;font-size:12px}#post_next_prev a.p_n_p_prefix:link{text-decoration:none}#post_next_prev a.p_n_p_prefix:hover{text-decoration:underline}blockquote{border:2px solid #efefef;padding-left:10px;padding-right:10px;padding-top:5px;padding-bottom:5px;margin-top:10px;margin-bottom:10px}.blogpost-body blockquote{border-left:3px solid #e2dfdf;border-right:none;border-top:none;border-bottom:none;margin:10px 0;padding:5px 10px}.under-post-card{margin-top:10px;line-height:1.5}#green_channel{padding:10px 0;margin-bottom:10px;margin-top:10px;border:#c0c0c0 1px dashed;font-size:12px;width:350px;text-align:center}#green_channel a{background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAkCAYAAABIdFAMAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAHhJREFUeNo8zjsOxCAMBFB/KEAUFFR0Cbng3nQPw68ArZdAlOZppPFIBhH5EAB8b+Tlt9MYQ6i1BuqFaq1CKSVcxZ2Acs6406KUgpt5/LCKuVgz5BDCSb13ZO99ZOdcZGvt4mJjzMVKqcha68iIePB86GAiOv8CDADlIUQBs7MD3wAAAABJRU5ErkJggg%3D%3D)repeat-x;display:inline-block;padding:3px 8px;color:#fff;text-decoration:none;font-weight:bold;cursor:pointer;margin-right:10px;-moz-border-radius:5px;-webkit-border-radius:10px;-moz-box-shadow:0 1px 3px rgba(0,0,0,.5);-webkit-box-shadow:0 1px 3px rgba(0,0,0,.5);text-shadow:0-1px 1px rgba(0,0,0,.25);vertical-align:middle}#green_channel a:hover{background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAyCAYAAACd+7GKAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAClJREFUeNpi/v//vwMTAwPDfzjBgMpFI/7hFSOT9Y8qRuF3JLoHAQIMAHYtMmRA+CugAAAAAElFTkSuQmCC)}#green_channel #green_channel_digg{background-color:#2daebf}#green_channel #green_channel_follow{background-color:#e33100}#green_channel #green_channel_favorite{background-color:#ffb515}#green_channel #green_channel_weibo img{vertical-align:middle;border:none;margin-left:5px;box-shadow:none}#green_channel #green_channel_weibo,#green_channel #green_channel_wechat{background:none;padding:3px 2px;-moz-border-radius:none;-webkit-border-radius:none;-moz-box-shadow:none;-webkit-box-shadow:none;text-shadow:none}#green_channel #green_channel_wechat img{width:24px;height:24px;border:medium none;box-shadow:none;margin-left:5px;vertical-align:middle}#cnblogs_post_body{margin-bottom:20px}#cnblogs_post_body ul{margin-left:30px;padding-left:0}#cnblogs_post_body ul li{list-style-type:disc}.ad_text_commentbox{margin-top:5px;margin-bottom:5px}#opt_under_post{line-height:1.8}.recent_comment_author{text-align:right;margin-right:4px}#HistoryToday{max-width:600px;text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.recent_comment_body{word-wrap:break-word}#cnblogs_post_body{word-break:break-word}#cnblogs_post_body>pre,#cnblogs_post_body p{margin:10px auto}#cnblogs_post_body p{text-indent:0}#div_digg .diggnum{line-height:1.5em!important}#div_digg .burynum{line-height:1.5em!important}#green_channel a:link,#green_channel a:visited,#green_channel a:active{color:#fff!important;border:none!important}.vertical-middle>*{vertical-align:middle}.category-item-link{word-break:break-word}.sidebar-card-title-a,a.sidebar-card-title-a:link,a.sidebar-card-title-a:visited{font-style:inherit!important;font-weight:inherit!important;font-size:inherit!important;color:inherit!important}.sidebar-category-item-count{font-size:11px;font-weight:normal}@keyframes fadeIn{0%{opacity:0}100%{opacity:var(--cnb-code-toolbar-initial-opacity)}}pre:fullscreen,pre:fullscreen code{box-sizing:border-box;border-radius:0;height:100vh;width:100vw}.login_tips{background-image:url(data:image/gif;base64,R0lGODlhEAAQAOZbAOny/v3+/lqIuT1wIOLu/lOMKKnB2omqzbTJ34+8Z9vq/c7c6tfo/ZSwhJOx0WyVwJGugWCJSbLSlff5/Pv8/efu9Y26ZDdrGUFzJXCYwuDt/vP3+uvx94usztrk793s/m6XwYe5YN/s/qO92Iu6YnCWXpeyiOnv9tXm/bHTkKa9mZ241dDj/dzm8Ex7Mejx/lePLd3r/vn7/NHk/eXw/tDk/dPm/dTm/dzq/d7s/tbn/WaOT3ugx2+XwuTv/o+7arbUnNnp/dDmurHFq9zr/X2iyF+Mu+bw/pm21Obx/oe6YFyKuvD2/oWny7HWktrp/Yy8ZYKjk+Pv/uHu/r7Q4z9xItHk/LTUlYGrYViHuP///////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAAFsALAAAAAAQABAAAAemgFuCg4SFhoeGGw5LWY2OWU0VhB0GFFqXmFoIGRSCEwIBTABJPlM5CjhaPC2CHA9aL0dSGh8KDChaBwutrzQEGjFPDDczubtbnwEAIkRBOjY1VlpFHoOUAZgELACaGTKDigKNK5dDJTsRKog9FVFYV0I/MBCGI0hGESlOWlAJA4UnQFDZ4gIIJgkXEG2pQkKJlhD+FJooYEGChQL0FDbAcAFDgy2BAAA7);background-repeat:no-repeat;margin-top:10px;padding:0 0 10px 25px;font-weight:400}.login_tips a{text-decoration:underline!important}#comment_nav{text-align:right}#comment_nav a{padding-left:10px}:root{--highlighted-line-bg:#d1e3c9;--highlighted-line-bg-dark:#264b33}:root{--cnblogs-current-collection-bg-color:rgba(245,245,245,.98);--cnblogs-current-collection-highlight-color:rgba(255,255,255,.9);--cnblogs-current-collection-hover-color:rgba(255,255,255,.7);--cnblogs-current-collection-active-color:rgba(255,255,255,.8)}@keyframes collapse{from{max-height:80vh;max-height:80vh;max-height:var(--olcb-folder-code-block-scroll-height,80vh)}to{max-height:80vh;max-height:80vh;max-height:var(--olcb-folder-code-block-max-height,80vh)}}@keyframes expand{from{max-height:80vh;max-height:80vh;max-height:var(--olcb-folder-code-block-max-height,80vh);overflow-y:hidden}to{max-height:"";max-height:"";max-height:var(--olcb-folder-code-block-scroll-height,"");overflow-y:hidden}}@keyframes modal-open{0%{height:0;opacity:0}95%{height:505px}100%{height:auto;opacity:1}}:root{--cnblogs-toc-bg-color:rgba(245,245,245,.98);--cnblogs-toc-highlight-color:rgba(255,255,255,.9);--cnblogs-toc-color:#000}@keyframes wb-fade-in{0%{opacity:0}to{opacity:.85}}pre code.hljs{display:block;overflow-x:auto;padding:1em}.hljs{color:#444}.hljs-number{color:#800}.hljs-meta .hljs-string{color:#38a}.dropdown-menu{z-index:1000;padding:0;float:left;margin:2px 0 0;list-style:none;text-shadow:none}/*!
+ * ui-dialog.css
+ * Date: 2014-07-03
+ * https://github.com/aui/artDialog
+ * (c) 2009-2014 TangBin, http://www.planeArt.cn
+ *
+ * This is licensed under the GNU LGPL, version 2.1 or later.
+ * For details, see: http://www.gnu.org/licenses/lgpl-2.1.html
+ */@-webkit-keyframes ui-dialog-loading{0%{-webkit-transform:rotate(0deg)}100%{-webkit-transform:rotate(360deg)}}@keyframes ui-dialog-loading{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}.navbar{box-shadow:0 2px 6px rgba(100,100,100,.15)}*{margin:0;padding:0}html{height:100%}body{color:#000;background-color:#e6e6e6;font-family:"Helvetica Neue",Helvetica,Verdana,Arial,sans-serif;font-size:12px;min-height:101%}img{border:0}li{list-style:none}a{outline:none;color:#21759b}a:link{color:#000;text-decoration:none}a:visited{color:#000;text-decoration:none}a:hover{color:#21759b}a:active{color:#000;text-decoration:none}.clear{clear:both}#home{margin:0 auto;width:65%;min-width:950px;background-color:#fff;padding:30px;margin-top:50px;margin-bottom:50px;box-shadow:0 2px 6px rgba(100,100,100,.3)}#header{padding-bottom:5px;margin-top:10px}#blogTitle{height:60px;clear:both}#blogTitle h1{font-size:26px;font-weight:bold;line-height:1.5em;margin-top:20px}#blogTitle h1 a{color:#515151}#blogTitle h1 a:hover{color:#21759b}#blogTitle h2{font-weight:normal;font-size:.928571429rem;line-height:1.846153846;color:#757575;float:left}#blogLogo{float:right}#navigator{font-size:13px;border-bottom:1px solid #ededed;border-top:1px solid #ededed;height:50px;clear:both;margin-top:25px}#navList{min-height:30px;float:left}#navList li{float:left;margin:0 40px 0 0}#navList a{display:block;width:5em;height:22px;float:left;text-align:center;padding-top:19px}#navList a:link,#navList a:visited,#navList a:active{color:#6a6a6a;font-weight:bold}#navList a:hover{color:#000;text-decoration:none}.blogStats{float:right;color:#757575;margin-top:19px;margin-right:2px;text-align:right}#main{width:100%;text-align:left;margin-top:30px}#mainContent .forFlow{margin-left:22em;float:none;width:auto}#mainContent{min-height:200px;padding:0 0 10px 0;-o-text-overflow:ellipsis;text-overflow:ellipsis;overflow:hidden;float:left;margin-left:-22em;width:100%}.postTitle{border-left:3px solid #21759b;margin-bottom:10px;clear:both}.postTitle a:link,.postTitle a:visited,.postTitle a:active{color:#21759b;transition:all .4s linear 0s}.postTitle a:hover{margin-left:30px;color:#0f3647;text-decoration:none}.postDesc{font-size:13px;float:left;clear:both;padding-right:5px;line-height:1.5}.postDesc a:link,.postDesc a:visited,.postDesc a:active{color:#666}.postDesc a:hover{color:#21759b;text-decoration:none}#sideBar{margin-top:-15px;width:230px;min-height:200px;padding:0 0 0 5px;float:right;-o-text-overflow:ellipsis;text-overflow:ellipsis;overflow:hidden}#sideBar a{color:#757575}#sideBar a:hover{color:#21759b;text-decoration:underline}.catListTag,.catListPostCategory,.catListPostArchive,.catListView,.catListFeedback,.catListComment{background:#fff;margin-bottom:35px;word-wrap:break-word}#blog-calendar{width:228px;padding-bottom:5px;margin-bottom:35px;box-shadow:0 1px 3px #ccc;border:1px solid #ededed}.catListTitle{font-weight:bold;line-height:1.2;margin-top:15px;margin-bottom:10px;text-align:left}.catListComment{line-height:1.5em}#sideBarMain ul{line-height:1.5em}#sideBarMain li{line-height:1.8}#topics{width:100%;min-height:200px;padding:0 0 10px 0;float:left;-o-text-overflow:ellipsis;text-overflow:ellipsis;overflow:hidden}#topics .postTitle{border:0;font-size:130%;font-weight:bold;float:left;line-height:1.5;width:100%;padding-left:5px}#BlogPostCategory{color:#666}#BlogPostCategory a{margin-left:5px;height:20px;line-height:20px;color:#333;padding:3px 14px;border-radius:10px;margin:2px 5px 0;background:#e7e7e7;text-decoration:none}#BlogCollection a:link,#BlogCollection a:visited,#BlogCollection a:active,#BlogPostCategory a:link,#BlogPostCategory a:visited,#BlogPostCategory a:active{color:#666}#BlogCollection a:hover,#BlogPostCategory a:hover{color:#f5f5f5;background:#21759b}#topics .postDesc{padding-left:0;width:100%;text-align:left;color:#666;margin-top:5px;background:none}#footer{color:#686868;text-align:center;min-height:15px;border-top:1px solid #ededed;margin-top:50px;padding-top:10px;margin-bottom:10px}.postBody{color:#000;line-height:1.7;font-size:14px}.postBody a:link,.postBody a:visited,.postBody a:active{text-decoration:underline}.postBody li{margin-bottom:1em}.postBody blockquote{background:url(data:image/gif;base64,R0lGODlhIAAYANUAAAAAAP////7+/v39/fz8/Pv7+/r6+vn5+fj4+Pf39/b29vX19fT09PPz8/Ly8vHx8fDw8O/v7+7u7u3t7ezs7Ovr6+rq6unp6ejo6Ofn5+Xl5ePj4+Li4uHh4d7e3tzc3Nvb29TU1NPT09LS0s7OzsnJycPDw8LCwsHBwcDAwL6+vr29vbu7u7m5ubi4uLe3t7a2trW1tbS0tLOzs7KysrCwsP///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAADYALAAAAAAgABgAAAb/wIBwSBwQCoakskAQEJ/QoWHhgEQk2GwE4kgQolBB4nGVRM7oNBayKICFhoY5Ta9fIwow4m7vqxtORHt+W1ZnD4Z/gQEGhBEPFBdWDxYViWgSC04Ccn4PGSYjDg4cKx8OfQcBBIQQGCswGA4bLioUl5h5CHN2DyU0LbcoNSZbdhIPAgy8dBAVKzIyJBowMTIhZHYQA8t9Vik0NCwdLDM0KhO4Z9sHzHQPIC4nHg8iLyYc6lcOAgP6aRgeQZBw4VEfCQmELHDXLM2/dW5WDXRE8QoCIgUmVvST8EmBBww3RugIZYACPiJHvoGzgEzIM1gwkVw5YIqDbGi4NEgQB0uyG5VPBAgdOnSIAAQgAQFd+mTAAQYKFjGdOmBIEAA7)no-repeat 25px 0;min-height:35px;line-height:1.6em;color:#333}#sideBar{font-size:12px}#sideBar h3{font-size:14px}.hljs{background:#f5f5f5;font-family:"Courier New",sans-serif;font-size:12px;border:1px solid #ccc;border-radius:3px}.hljs-comment{color:#008000}.hljs-keyword,.hljs-built_in{color:#00f}.hljs-title,.hljs-type{color:#a31515}.hljs-meta{color:#2b91af}</style>
+<style media="only screen and (max-width: 767px)">body{font-size:14px!important;-webkit-text-size-adjust:none}.forpc{display:none!important}#blog_nav_newpost{display:none!important}#green_channel{width:100%}.commentform{margin-left:10px}.navbar{display:none}.cnblogs-markdown :not(pre,div,td)>code,.blogpost-body :not(pre,div,td)>code{white-space:pre-wrap}.skin-simplememory #mainContent{float:none;margin-left:0}.skin-simplememory #main{padding:10px}.skin-simplememory .forFlow{margin:0 10px}.skin-simplememory #sideBarMain{width:100%;float:none;padding:10px;margin-right:0}#mainContent{width:100%!important;padding-right:0!important}#mainContent .forFlow{margin-left:0!important}#sideBar{float:none;width:auto;margin-top:10px}#home{width:auto;min-width:0;margin-left:0!important;margin-right:0!important;margin-top:0}.postTitle{float:none}#navList a{width:auto}#topics .postTitle{width:auto}</style>
+<link type=application/rss+xml rel=alternate href=https://www.cnblogs.com/jerry323/rss>
+<link type=application/rsd+xml rel=EditURI href=https://www.cnblogs.com/jerry323/rsd.xml>
+<link type=application/wlwmanifest+xml rel=wlwmanifest href=https://www.cnblogs.com/jerry323/wlwmanifest.xml>
+<style>#MathJax_Message{position:fixed;left:1em;bottom:1.5em;background-color:#E6E6E6;border:1px solid #959595;margin:0px;padding:2px 8px;z-index:102;color:black;font-size:80%;width:auto;white-space:nowrap}</style><link id=favicon rel="shortcut icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PGRlZnM+PGNsaXBQYXRoIGlkPSJwcmVmaXhfX2NsaXAtcGF0aCI+PHBhdGggY2xhc3M9InByZWZpeF9fY2xzLTEiIGQ9Ik0yOS40OCAyNS4yNGMtLjE2LTEuODktLjA4LTEuNS0uMjQtMy4xNmE3Mi4yNCA3Mi4yNCAwIDAwLTItMTAuMzdMMjYgNi4yNWwtMi42IDUuNDEtLjQ0Ljg5cS0uMjQuNDgtLjU0IDFhMjAuNDMgMjAuNDMgMCAwMS0xLjI0IDEuODQgMjAuMDggMjAuMDggMCAwMS0zLjA4IDMuMjQgMTkuNzIgMTkuNzIgMCAwMS0zLjg3IDIuNTNjLS43Mi4zMy0xLjQ1LjcxLTIuMjMgMS0uMzQuMTQtMS4xOS40NC0xLjkzLjY2YTIuNTUgMi41NSAwIDAxLTEuMDctLjNjLS4zNC0xLS44My0yLjI0LTEuMi0zLjE5LS41LTEuMjUtMS0yLjUtMS41MS0zLjczYTU5LjExIDU5LjExIDAgMDAtMy42Mi03LjI1IDU5LjgyIDU5LjgyIDAgMDAxLjUxIDcuOTRjLjMgMS4zLjcgMi41OCAxLjA1IDMuODdTNiAyMi43MSA2LjQ0IDI0YTEuNCAxLjQgMCAwMDEuMjkuOTNjMS4yOCAwIDIuNTcuMDYgMy44Ni4wNXMyLjU5IDAgMy44OC0uMTFhNTYgNTYgMCAwMDcuNzktLjg3Yy0xLjkyLS40OS03LjUtLjgxLTEwLjc5LTEuMDZhNDMgNDMgMCAwMDYuNTMtMS43IDI0LjA2IDI0LjA2IDAgMDA1LjM4LTMuNDVjLjcxLS42MiAxLjIxIDEuODggMi4zOSA1LjI3LjYyIDEuNjkuMzQgMSAxIDIuNjZzMS4zNyA0LjM4IDIuMTcgNmMtLjA3LTEuODItLjMxLTQuNjctLjQ2LTYuNDh6Ii8+PC9jbGlwUGF0aD48Y2xpcFBhdGggaWQ9InByZWZpeF9fY2xpcC1wYXRoLTIiPjxwYXRoIGNsYXNzPSJwcmVmaXhfX2Nscy0xIiBkPSJNMjAuOTIgMy40NmE0LjI1IDQuMjUgMCAwMS4zMSA1Ljg2IDMuOTEgMy45MSAwIDAxLTUuNjYuMjQgNC4yNSA0LjI1IDAgMDEtLjMxLTUuODYgMy45MSAzLjkxIDAgMDE1LjY2LS4yNG0xLjM1LTEuNTRhNS44OSA1Ljg5IDAgMDAtOC41My4zNiA2LjQxIDYuNDEgMCAwMC40OCA4LjgzIDUuOTEgNS45MSAwIDAwOC41My0uMzYgNi40MSA2LjQxIDAgMDAtLjQ4LTguODN6Ii8+PC9jbGlwUGF0aD48c3R5bGU+LnByZWZpeF9fY2xzLTF7ZmlsbDojM2UzYTM5fUBtZWRpYSAocHJlZmVycy1jb2xvci1zY2hlbWU6ZGFyayl7LnByZWZpeF9fY2xzLTF7ZmlsbDojZWZlZmVmfX08L3N0eWxlPjwvZGVmcz48ZyBzdHlsZT0iaXNvbGF0aW9uOmlzb2xhdGUiPjxnIGlkPSJwcmVmaXhfX2xheWVyXzEiIGRhdGEtbmFtZT0ibGF5ZXIgMSI+PHBhdGggY2xhc3M9InByZWZpeF9fY2xzLTEiIGQ9Ik0yOS40OCAyNS4yNGMtLjE2LTEuODktLjA4LTEuNS0uMjQtMy4xNmE3Mi4yNCA3Mi4yNCAwIDAwLTItMTAuMzdMMjYgNi4yNWwtMi42IDUuNDEtLjQ0Ljg5cS0uMjQuNDgtLjU0IDFhMjAuNDMgMjAuNDMgMCAwMS0xLjI0IDEuODQgMjAuMDggMjAuMDggMCAwMS0zLjA4IDMuMjQgMTkuNzIgMTkuNzIgMCAwMS0zLjg3IDIuNTNjLS43Mi4zMy0xLjQ1LjcxLTIuMjMgMS0uMzQuMTQtMS4xOS40NC0xLjkzLjY2YTIuNTUgMi41NSAwIDAxLTEuMDctLjNjLS4zNC0xLS44My0yLjI0LTEuMi0zLjE5LS41LTEuMjUtMS0yLjUtMS41MS0zLjczYTU5LjExIDU5LjExIDAgMDAtMy42Mi03LjI1IDU5LjgyIDU5LjgyIDAgMDAxLjUxIDcuOTRjLjMgMS4zLjcgMi41OCAxLjA1IDMuODdTNiAyMi43MSA2LjQ0IDI0YTEuNCAxLjQgMCAwMDEuMjkuOTNjMS4yOCAwIDIuNTcuMDYgMy44Ni4wNXMyLjU5IDAgMy44OC0uMTFhNTYgNTYgMCAwMDcuNzktLjg3Yy0xLjkyLS40OS03LjUtLjgxLTEwLjc5LTEuMDZhNDMgNDMgMCAwMDYuNTMtMS43IDI0LjA2IDI0LjA2IDAgMDA1LjM4LTMuNDVjLjcxLS42MiAxLjIxIDEuODggMi4zOSA1LjI3LjYyIDEuNjkuMzQgMSAxIDIuNjZzMS4zNyA0LjM4IDIuMTcgNmMtLjA3LTEuODItLjMxLTQuNjctLjQ2LTYuNDh6Ii8+PGcgY2xpcC1wYXRoPSJ1cmwoI3ByZWZpeF9fY2xpcC1wYXRoKSI+PHBhdGggY2xhc3M9InByZWZpeF9fY2xzLTEiIGQ9Ik0tLjg3LS43OGgzNC40MnYzMy4wN0gtLjg3eiIvPjwvZz48cGF0aCBjbGFzcz0icHJlZml4X19jbHMtMSIgZD0iTTIwLjkyIDMuNDZhNC4yNSA0LjI1IDAgMDEuMzEgNS44NiAzLjkxIDMuOTEgMCAwMS01LjY2LjI0IDQuMjUgNC4yNSAwIDAxLS4zMS01Ljg2IDMuOTEgMy45MSAwIDAxNS42Ni0uMjRtMS4zNS0xLjU0YTUuODkgNS44OSAwIDAwLTguNTMuMzYgNi40MSA2LjQxIDAgMDAuNDggOC44MyA1LjkxIDUuOTEgMCAwMDguNTMtLjM2IDYuNDEgNi40MSAwIDAwLS40OC04LjgzeiIvPjxnIGNsaXAtcGF0aD0idXJsKCNwcmVmaXhfX2NsaXAtcGF0aC0yKSI+PHBhdGggY2xhc3M9InByZWZpeF9fY2xzLTEiIGQ9Ik0tLjg3LS43OGgzNC40MnYzMy4wN0gtLjg3eiIvPjwvZz48L2c+PC9nPjwvc3ZnPg==" type=image/svg+xml><style>.sf-hidden{display:none!important}</style><link rel=canonical href=https://www.cnblogs.com/jerry323/p/9097264.html><meta http-equiv=content-security-policy content="default-src 'none'; font-src 'self' data:; img-src 'self' data:; style-src 'unsafe-inline'; media-src 'self' data:; script-src 'unsafe-inline' data:; object-src 'self' data:; frame-src 'self' data:;"><style>img[src="data:,"],source[src="data:,"]{display:none!important}</style></head>
+<body class="skin-simplememory has-navbar mathjax2 hljs-engine"><div id=MathJax_Message style=display:none></div>
+ <a name=top></a>
+ <div id=bannerbar class="bannerbar-mobile bannerbar-text-mobile formobile sf-hidden">
+ 
+ </div>
+ <div id=top_nav class="navbar forpc">
+ <nav id=nav_main class=navbar-main>
+ <ul id=nav_left class="navbar-list navbar-left">
+ <li class=navbar-branding>
+ <a href=https://www.cnblogs.com/ title=开发者的网上家园 role=banner>
+ <img src="data:image/svg+xml;base64,PHN2ZyBpZD0ibGF5ZXJfMSIgZGF0YS1uYW1lPSJsYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2aWV3Qm94PSIwIDAgMjgwIDEwMi42NiI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOnVybCgjZ3JhZGllbnQpO30uY2xzLTJ7ZmlsbDojOGRjZWZjO30uY2xzLTMsLmNscy00e2ZpbGw6bm9uZTtzdHJva2UtbWl0ZXJsaW1pdDoxMDtzdHJva2Utd2lkdGg6MnB4O30uY2xzLTN7c3Ryb2tlOiM0NTdhYjU7fS5jbHMtNHtzdHJva2U6dXJsKCNncmFkaWVudF8zKTt9LmNscy01e2ZpbGw6dXJsKCNncmFkaWVudF8yKTt9LmNscy02e2ZpbGw6IzJlN2FjYzt9LmNscy03e2ZpbGw6I2UzM2UwNjt9LmNscy04e2ZpbGw6IzhjOGM4Yzt9PC9zdHlsZT48cmFkaWFsR3JhZGllbnQgaWQ9ImdyYWRpZW50IiBjeD0iNDkuMjIiIGN5PSItNjU1MC45NSIgcj0iNDQuNjIiIGdyYWRpZW50VHJhbnNmb3JtPSJtYXRyaXgoMSwgMCwgMCwgLTAuMDcsIDAsIC0zNTkuNDkpIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjOGM4YzhjIi8+PHN0b3Agb2Zmc2V0PSIwLjEzIiBzdG9wLWNvbG9yPSIjOTE5MTkxIiBzdG9wLW9wYWNpdHk9IjAuOTUiLz48c3RvcCBvZmZzZXQ9IjAuMzIiIHN0b3AtY29sb3I9IiNhMGEwYTAiIHN0b3Atb3BhY2l0eT0iMC44MyIvPjxzdG9wIG9mZnNldD0iMC41NCIgc3RvcC1jb2xvcj0iI2I4YjhiOCIgc3RvcC1vcGFjaXR5PSIwLjYxIi8+PHN0b3Agb2Zmc2V0PSIwLjc4IiBzdG9wLWNvbG9yPSIjZGFkYWRhIiBzdG9wLW9wYWNpdHk9IjAuMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZmYiIHN0b3Atb3BhY2l0eT0iMCIvPjwvcmFkaWFsR3JhZGllbnQ+PHJhZGlhbEdyYWRpZW50IGlkPSJncmFkaWVudF8zIiBjeD0iLTE0Ny41NSIgY3k9Ii0yNjIuMjciIHI9IjIzLjI2IiBncmFkaWVudFRyYW5zZm9ybT0ibWF0cml4KDAuOTUsIC0wLjMyLCAtMC4zMiwgLTAuOTUsIDEyMS41LCAtMjc1LjYzKSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZiIvPjxzdG9wIG9mZnNldD0iMC4yMSIgc3RvcC1jb2xvcj0iI2ZmZiIgc3RvcC1vcGFjaXR5PSIwLjk5Ii8+PHN0b3Agb2Zmc2V0PSIwLjM0IiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9IjAuOTYiLz48c3RvcCBvZmZzZXQ9IjAuNDYiIHN0b3AtY29sb3I9IiNmZmYiIHN0b3Atb3BhY2l0eT0iMC45Ii8+PHN0b3Agb2Zmc2V0PSIwLjU2IiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9IjAuODEiLz48c3RvcCBvZmZzZXQ9IjAuNjYiIHN0b3AtY29sb3I9IiNmZmYiIHN0b3Atb3BhY2l0eT0iMC43MSIvPjxzdG9wIG9mZnNldD0iMC43NCIgc3RvcC1jb2xvcj0iI2ZmZiIgc3RvcC1vcGFjaXR5PSIwLjU4Ii8+PHN0b3Agb2Zmc2V0PSIwLjgzIiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9IjAuNDIiLz48c3RvcCBvZmZzZXQ9IjAuOTEiIHN0b3AtY29sb3I9IiNmZmYiIHN0b3Atb3BhY2l0eT0iMC4yNCIvPjxzdG9wIG9mZnNldD0iMC45OSIgc3RvcC1jb2xvcj0iI2ZmZiIgc3RvcC1vcGFjaXR5PSIwLjA0Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9IjAiLz48L3JhZGlhbEdyYWRpZW50PjxyYWRpYWxHcmFkaWVudCBpZD0iZ3JhZGllbnRfMiIgY3g9IjYxLjE5IiBjeT0iNTcuOTMiIHI9IjU0LjU2IiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjN2FhY2RmIi8+PHN0b3Agb2Zmc2V0PSIwLjI3IiBzdG9wLWNvbG9yPSIjNzBhNmRkIi8+PHN0b3Agb2Zmc2V0PSIwLjczIiBzdG9wLWNvbG9yPSIjNTQ5NmQ5Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNDA4YmQ2Ii8+PC9yYWRpYWxHcmFkaWVudD48L2RlZnM+PHRpdGxlPuWNmuWuouWbrWxvZ288L3RpdGxlPjxnIGlkPSJsYXllcl8yIiBkYXRhLW5hbWU9ImxheWVyIDIiPjxnIGlkPSJsYXllcl8xLTIiIGRhdGEtbmFtZT0ibGF5ZXIgMS0yIj48ZWxsaXBzZSBjbGFzcz0iY2xzLTEiIGN4PSI0OS4yMiIgY3k9Ijk5LjQ0IiByeD0iNDQuNjIiIHJ5PSIzLjIyIi8+PHBhdGggY2xhc3M9ImNscy0yIiBkPSJNNDkuMjIsMUE0OC4yMiw0OC4yMiwwLDEsMCw5Ny40NCw0OS4yMiw0OC4yMiw0OC4yMiwwLDAsMCw0OS4yMiwxWk0zNCw3Ny4wNkExMC40NiwxMC40NiwwLDEsMSw0NC40Myw2Ni42LDEwLjQ2LDEwLjQ2LDAsMCwxLDM0LDc3LjA2Wm0yNS4xMS00YTYuNSw2LjUsMCwwLDEtNi41LTYuNWMwLTkuODEtOC41MS0xOC4xLTE4LjU4LTE4LjFhNi41LDYuNSwwLDAsMSwwLTEzYzE3LjEyLDAsMzEuNTgsMTQuMjQsMzEuNTgsMzEuMUE2LjUsNi41LDAsMCwxLDU5LjA4LDczLjFaTTc5LjcyLDY3bC0uNTYsMGE2LjUsNi41LDAsMCwxLTYuNDctNkM3MS4zNSw0NS4yOSw1OS41NywyOC41LDQwLjQsMjguNWE2LjUsNi41LDAsMCwxLDAtMTNDNjQsMTUuNSw4My40OCwzNC42Myw4NS42NSw2MEE2LjUxLDYuNTEsMCwwLDEsNzkuNzIsNjdaIi8+PGNpcmNsZSBjbGFzcz0iY2xzLTMiIGN4PSI0OS4yMiIgY3k9IjQ5LjIyIiByPSI0OC4yMiIvPjxwYXRoIGNsYXNzPSJjbHMtNCIgZD0iTTM1LjIsNS44OWMyMy44OC03Ljc4LDUwLDUuMzYsNTcuNDEsMjkuMDUiLz48cGF0aCBjbGFzcz0iY2xzLTUiIGQ9Ik00OS4yMiw0LjZBNDQuNjIsNDQuNjIsMCwxLDAsOTMuODQsNDkuMjIsNDQuNjIsNDQuNjIsMCwwLDAsNDkuMjIsNC42Wk0zNCw3Ny4wNkExMC40NiwxMC40NiwwLDEsMSw0NC40Myw2Ni42LDEwLjQ2LDEwLjQ2LDAsMCwxLDM0LDc3LjA2Wm0yNS4xMS00YTYuNSw2LjUsMCwwLDEtNi41LTYuNWMwLTkuODEtOC41MS0xOC4xLTE4LjU4LTE4LjFhNi41LDYuNSwwLDAsMSwwLTEzYzE3LjEyLDAsMzEuNTgsMTQuMjQsMzEuNTgsMzEuMUE2LjUsNi41LDAsMCwxLDU5LjA4LDczLjFaTTc5LjcyLDY3bC0uNTYsMGE2LjUsNi41LDAsMCwxLTYuNDctNkM3MS4zNSw0NS4yOSw1OS41NywyOC41LDQwLjQsMjguNWE2LjUsNi41LDAsMCwxLDAtMTNDNjQsMTUuNSw4My40OCwzNC42Myw4NS42NSw2MEE2LjUxLDYuNTEsMCwwLDEsNzkuNzIsNjdaIi8+PHBhdGggY2xhc3M9ImNscy02IiBkPSJNNzkuNzIsNjdsLS41NiwwYTYuNSw2LjUsMCwwLDEtNi40Ny02LDM5LjI0LDM5LjI0LDAsMCwwLTQuNDUtMTUsNTYuNjQsNTYuNjQsMCwwLDAtMzctMTMuNThBNTcsNTcsMCwwLDAsNS45MywzOC4zOSw0NC42MSw0NC42MSwwLDAsMCw4NS42Miw3NWE1MS40LDUxLjQsMCwwLDAtMi44Ni05QTYuNTUsNi41NSwwLDAsMSw3OS43Miw2N1pNMzQsNzcuMDZBMTAuNDYsMTAuNDYsMCwxLDEsNDQuNDMsNjYuNiwxMC40NiwxMC40NiwwLDAsMSwzNCw3Ny4wNlptMjUuMTEtNGE2LjUsNi41LDAsMCwxLTYuNS02LjVjMC05LjgxLTguNTEtMTguMS0xOC41OC0xOC4xYTYuNSw2LjUsMCwwLDEsMC0xM2MxNy4xMiwwLDMxLjU4LDE0LjI0LDMxLjU4LDMxLjFBNi41LDYuNSwwLDAsMSw1OS4wOCw3My4xWiIvPjxwYXRoIGNsYXNzPSJjbHMtNyIgZD0iTTExNS4wOCwyNC44OFYxMC4yNGg0LjI2VjI0Ljg4aDYuMDZ2NC4yaC02LjA2djM2aC00LjI2di0zNkgxMDguNnYtNC4yWk0xNTAuODQsNDcuOHYtM0gxNTV2M2g3Ljg2djMuODRIMTU1VjYwLjRjMCwzLjEyLTEuNTYsNC42OC00LjYyLDQuNjhoLTYuNmwtLjktNGMyLjEuMTgsNC4xNC4zLDYuMDYuMywxLjIsMCwxLjg2LS42NiwxLjg2LTJWNTEuNjRoLTI2VjQ3LjhabS05LTMzLjM2VjEwLjNIMTQ2djQuMTRoN2EzNC4wOCwzNC4wOCwwLDAsMC0xLjc0LTMuNmwzLjcyLS42YTM5LjE5LDM5LjE5LDAsMCwxLDEuNTYsNC4yaDUuMTZWMTguMUgxNDZ2NC4xNGgxMy42VjQ0aC00VjM5LjgySDE0NlY0My42aC00LjE0VjM5LjgySDEzMi4zVjQ0aC00VjIyLjI0aDEzLjU2VjE4LjFIMTI2LjE4VjE0LjQ0Wk0xNDIsNTkuMzhsLTIuNywyLjdBNTYuNjEsNTYuNjEsMCwwLDAsMTMxLDU0LjM0bDIuNjQtMi41MkE1OC41Miw1OC41MiwwLDAsMSwxNDIsNTkuMzhabS0uMTItMjkuNThWMjUuNkgxMzIuM3Y0LjJabTAsNy4wOFYzMi44SDEzMi4zdjQuMDhaTTE0NiwyOS44aDkuNlYyNS42SDE0NlptMCw3LjA4aDkuNlYzMi44SDE0NloiLz48cGF0aCBjbGFzcz0iY2xzLTciIGQ9Ik0xOTIuMDYsMjAuNjhjLS45LDEuMzgtMS44LDIuNy0yLjc2LDRoMjIuMTR2My40OGEzMi43MywzMi43MywwLDAsMS0xMC42Miw5LjA2LDc0Ljc1LDc0Ljc1LDAsMCwwLDIyLDQuNzRsLTEsMy45YTcwLDcwLDAsMCwxLTI1LjUtNi40MmMtNy4wOCwzLjI0LTE2LDUuNzYtMjYuODIsNy42MmwtMS42Mi0zLjg0YzkuNjYtMS41NiwxNy43LTMuNTQsMjQuMDYtNi4wNkE1NC45Myw1NC45MywwLDAsMSwxODMuNDgsMzFhNTcuMiw1Ny4yLDAsMCwxLTcuNSw1LjY0bC0yLjc2LTMuMzZhNDQuNTIsNDQuNTIsMCwwLDAsMTQuNjQtMTMuNVpNMjE5Ljc4LDI2SDIxNS40VjE4LjUyaC00MFYyNkgxNzFWMTQuNjJoMjJhMzkuMTUsMzkuMTUsMCwwLDAtMi4yMi00LjJsNC43NC0uNzJjLjcyLDEuNDQsMS4zOCwzLjEyLDIuMSw0LjkyaDIyLjE0Wm0tNi43MiwzOS4zNmgtNC4yVjYyLjc0aC0yNS44djIuNThoLTQuMlY0Ni41NGgzNC4yWm0tNC4yLTYuNDh2LTguNGgtMjUuOHY4LjRaTTIwNi4yOCwyOC4zaC0yMC4xbC0uMTguMThhNTMuNiw1My42LDAsMCwwLDEwLjM4LDYuNzJBMzYsMzYsMCwwLDAsMjA2LjI4LDI4LjNaIi8+PHBhdGggY2xhc3M9ImNscy03IiBkPSJNMjgwLDY1LjE0aC00LjMydi0yLjRIMjM1LjJ2Mi40aC00LjMyVjEyLjgySDI4MFptLTQuMzItNi4yNFYxNi43OEgyMzUuMlY1OC45Wm0tNC4yLTI2LjM0VjM2LjRoLTkuNlY0OC43YzAsMS40NC42LDIuMTYsMS45MiwyLjE2SDI2NmEzLjA1LDMuMDUsMCwwLDAsMS45Mi0uNTRjLjcyLS40MiwxLjE0LTIuNTIsMS4zOC02LjI0bDMuNiwxLjJjLS40OCw0LjQ0LTEuMDgsNy4xNC0xLjkyLDhzLTIuMTYsMS4wOC00LjE0LDEuMTRIMjYyLjVhNC40Niw0LjQ2LDAsMCwxLTMuNDItMS4zMiw1LDUsMCwwLDEtMS4yLTMuNDhWMzYuNGgtNS43Yy0uNTQsNC45Mi0xLjY4LDguNy0zLjQ4LDExLjQ2LTIsMy4xMi01LjIyLDUuNTItOS40Miw3LjMybC0yLTMuNDhhMTYuNDksMTYuNDksMCwwLDAsOC4xNi02LjEyLDIyLjQzLDIyLjQzLDAsMCwwLDIuODgtOS4xOEgyMzkuNFYzMi41NlptLTMuNC0xMC4yNnYzLjg0SDI0Mi44MlYyMi4zWiIvPjxwYXRoIGNsYXNzPSJjbHMtOCIgZD0iTTEyMy4zNyw3OWE2LjE4LDYuMTgsMCwwLDEsNS4zMSwyLjUybC0xLjUsMS4zOGE0LjMyLDQuMzIsMCwwLDAtMy42OS0xLjljLTMuMDksMC01LDIuMzctNSw1LjU4czEuOTIsNS42MSw1LDUuNjFhNC4zNyw0LjM3LDAsMCwwLDMuNjktMS44OWwxLjUsMS4zOGE2LjE4LDYuMTgsMCwwLDEtNS4zMSwyLjUyYy00LjMyLDAtNy4yMy0zLjMtNy4yMy03LjYyUzExOS4wNSw3OSwxMjMuMzcsNzlaIi8+PHBhdGggY2xhc3M9ImNscy04IiBkPSJNMTQxLjYxLDg0LjM2YzAtMi41NS0xLjI5LTMuMzYtMy4yNC0zLjM2YTUuNTksNS41OSwwLDAsMC00LjI5LDIuMjVWOTMuODRoLTIuMjVWNzkuMzVoMi4yNXYyLjFBNy4yMiw3LjIyLDAsMCwxLDEzOS4yNCw3OWMzLDAsNC42MiwxLjUzLDQuNjIsNC42OFY5My44NGgtMi4yNVoiLz48cGF0aCBjbGFzcz0iY2xzLTgiIGQ9Ik0xNDguMzYsNzMuODNoMi4yNXY3LjcxQTYsNiwwLDAsMSwxNTUuNSw3OWMzLjc4LDAsNi40NSwzLDYuNDUsNy42MnMtMi42Nyw3LjU5LTYuNDUsNy41OWE2LjExLDYuMTEsMCwwLDEtNC44OS0yLjUydjIuMTZoLTIuMjVabTYuNTcsMTguMzZjMi45NCwwLDQuNjgtMi4zNyw0LjY4LTUuNThTMTU3Ljg3LDgxLDE1NC45Myw4MWE1LjM5LDUuMzksMCwwLDAtNC4zMiwyLjM0djYuNTdhNS4zNiw1LjM2LDAsMCwwLDQuMzIsMi4yOFoiLz48cGF0aCBjbGFzcz0iY2xzLTgiIGQ9Ik0xNjUuNjEsNzMuODNoMi4yNXYyMGgtMi4yNVoiLz48cGF0aCBjbGFzcz0iY2xzLTgiIGQ9Ik0xNzEuNTIsODYuNThjMC00LjIsMi43Ni03LjU5LDcuMTctNy41OXM3LjE3LDMuMzksNy4xNyw3LjU5LTIuNzYsNy42Mi03LjE3LDcuNjJTMTcxLjUyLDkwLjc4LDE3MS41Miw4Ni41OFptMTIsMGMwLTIuOTQtMS43MS01LjU4LTQuOC01LjU4cy00LjgzLDIuNjQtNC44Myw1LjU4LDEuNzQsNS42MSw0LjgzLDUuNjEsNC43Ny0yLjY0LDQuNzctNS42MVoiLz48cGF0aCBjbGFzcz0iY2xzLTgiIGQ9Ik0xOTAuNjMsOTUuODhhNS41Myw1LjUzLDAsMCwwLDQuNzEsMmMyLjQsMCw0LjY1LTEuMTcsNC42NS00LjM1VjkxLjQ0QTYuMDYsNi4wNiwwLDAsMSwxOTUuMTMsOTRjLTMuNzgsMC02LjQ1LTIuODItNi40NS03LjVzMi42NC03LjUsNi40NS03LjVBNiw2LDAsMCwxLDIwMCw4MS41NFY3OS4zNWgyLjI1VjkzLjQyYzAsNC44LTMuMzYsNi4zLTYuOSw2LjNhNy4zOSw3LjM5LDAsMCwxLTUuODUtMi4xNlpNMjAwLDgzLjM0QTUuMzQsNS4zNCwwLDAsMCwxOTUuNjcsODFjLTIuOTEsMC00LjY1LDIuMzEtNC42NSw1LjUyUzE5Mi43Niw5MiwxOTUuNjcsOTJBNS4zNiw1LjM2LDAsMCwwLDIwMCw4OS42N1oiLz48cGF0aCBjbGFzcz0iY2xzLTgiIGQ9Ik0yMDYuNjUsOTAuM2E2LjU0LDYuNTQsMCwwLDAsNC43NywyLjA3YzIuMjIsMCwzLjQyLTEsMy40Mi0yLjQsMC0xLjU5LTEuNzctMi4xLTMuNzItMi41OC0yLjQ2LS41Ny01LjI1LTEuMjMtNS4yNS00LjIzLDAtMi4yNSwxLjk1LTQuMTcsNS40LTQuMTdhNy4zNiw3LjM2LDAsMCwxLDUuMzcsMi4xbC0xLDEuNTZhNS42Miw1LjYyLDAsMCwwLTQuMzItMS44M2MtMiwwLTMuMjEuOS0zLjIxLDIuMTlzMS42NSwxLjg2LDMuNTQsMi4zMWMyLjUyLjU3LDUuNDMsMS4yOSw1LjQzLDQuNSwwLDIuNDMtMiw0LjM4LTUuNyw0LjM4YTcuNzEsNy43MSwwLDAsMS01Ljg1LTIuMjhaIi8+PHBhdGggY2xhc3M9ImNscy04IiBkPSJNMjIxLjg5LDkwLjg0YTEuNjUsMS42NSwwLDEsMS0xLjY1LDEuNjVoMEExLjY2LDEuNjYsMCwwLDEsMjIxLjg5LDkwLjg0WiIvPjxwYXRoIGNsYXNzPSJjbHMtOCIgZD0iTTIzMy43Nyw3OWE2LjE4LDYuMTgsMCwwLDEsNS4zMSwyLjUybC0xLjUsMS4zOGE0LjMyLDQuMzIsMCwwLDAtMy42OS0xLjljLTMuMDksMC01LDIuMzctNSw1LjU4czEuOTIsNS42MSw1LDUuNjFhNC4zNyw0LjM3LDAsMCwwLDMuNjktMS44OWwxLjUsMS4zOGE2LjE4LDYuMTgsMCwwLDEtNS4zMSwyLjUyYy00LjMyLDAtNy4yMy0zLjMtNy4yMy03LjYyUzIyOS40NSw3OSwyMzMuNzcsNzlaIi8+PHBhdGggY2xhc3M9ImNscy04IiBkPSJNMjQxLjM5LDg2LjU4YzAtNC4yLDIuNzYtNy41OSw3LjE3LTcuNTlzNy4xNywzLjM5LDcuMTcsNy41OVMyNTMsOTQuMiwyNDguNTYsOTQuMiwyNDEuMzksOTAuNzgsMjQxLjM5LDg2LjU4Wm0xMiwwYzAtMi45NC0xLjcxLTUuNTgtNC44LTUuNThzLTQuODMsMi42NC00LjgzLDUuNTgsMS43NCw1LjYxLDQuODMsNS42MSw0Ljc3LTIuNjQsNC43Ny01LjYxWiIvPjxwYXRoIGNsYXNzPSJjbHMtOCIgZD0iTTI3Ni44OCw4NGMwLTEuODMtLjgxLTMtMi42Ny0zYTUuMDcsNS4wNywwLDAsMC0zLjg0LDIuMjJWOTMuODRoLTIuMjVWODRjMC0xLjgzLS43OC0zLTIuNjctM2E1LjA5LDUuMDksMCwwLDAtMy44MSwyLjI1VjkzLjg0aC0yLjI1Vjc5LjM1aDIuMjV2Mi4xQTYuMjUsNi4yNSwwLDAsMSwyNjYuMzIsNzlhMy43MiwzLjcyLDAsMCwxLDMuOSwyLjcsNi4xLDYuMSwwLDAsMSw0Ljg2LTIuN2MyLjY0LDAsNC4wNSwxLjQ3LDQuMDUsNC4zOFY5My44NGgtMi4yNVoiLz48L2c+PC9nPjwvc3ZnPg==" alt=博客园Logo>
+ </a>
+ </li>
+ <li>
+ <a href=https://www.cnblogs.com/>首页</a>
+ </li>
+ <li>
+ <a href=https://news.cnblogs.com/>新闻</a>
+ </li>
+ <li>
+ <a href=https://q.cnblogs.com/>博问</a>
+ </li>
+ <li><a href=https://www.cnblogs.com/cmt/p/17320765.html target=_blank>助园</a></li>
+ <li>
+ <a href=https://ing.cnblogs.com/>闪存</a>
+ </li>
+ <li>
+ <a href=https://edu.cnblogs.com/>班级</a>
+ </li>
+ </ul>
+ <ul id=nav_right class="navbar-list navbar-right">
+ <li>
+ <form id=zzk_search class="navbar-search dropdown" action=https://zzk.cnblogs.com/s role=search>
+ <input name=w id=zzk_search_input placeholder=代码改变世界 type=search tabindex=3 autocomplete=off value>
+ <button id=zzk_search_button>
+ <img id=search_icon class=focus-hidden src=data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAgMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgc3Ryb2tlLXdpZHRoPSIyIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxIDEuNDU4KSIgc3Ryb2tlPSIjOTc5Nzk3IiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgY3g9IjcuNSIgY3k9IjcuNSIgcj0iNy41Ii8+PHBhdGggZD0iTTEyLjQ5NCAxMi4wNDhsNy43NzggNy43NzgiLz48L2c+PC9zdmc+ alt=搜索>
+ <img class="hidden focus-visible sf-hidden" src=data:, alt=搜索>
+ </button>
+ <ul id=navbar_search_options class="dropdown-menu quick-search-menu">
+ <li tabindex=0 class=active>
+ <div class=keyword-wrapper>
+ <img src=data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAgMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgc3Ryb2tlLXdpZHRoPSIyIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxIDEuNDU4KSIgc3Ryb2tlPSIjOTc5Nzk3IiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgY3g9IjcuNSIgY3k9IjcuNSIgcj0iNy41Ii8+PHBhdGggZD0iTTEyLjQ5NCAxMi4wNDhsNy43NzggNy43NzgiLz48L2c+PC9zdmc+ alt=搜索>
+ <div class=keyword></div>
+ </div>
+ <span class=search-area>所有博客</span>
+ </li>
+ <li tabindex=1>
+ <div class=keyword-wrapper>
+ <img src=data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAgMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgc3Ryb2tlLXdpZHRoPSIyIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxIDEuNDU4KSIgc3Ryb2tlPSIjOTc5Nzk3IiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgY3g9IjcuNSIgY3k9IjcuNSIgcj0iNy41Ii8+PHBhdGggZD0iTTEyLjQ5NCAxMi4wNDhsNy43NzggNy43NzgiLz48L2c+PC9zdmc+ alt=搜索>
+ <div class=keyword></div>
+ </div>
+ <span class=search-area>当前博客</span>
+ </li>
+ </ul>
+ </form>
+ </li>
+ <li id=navbar_login_status class=navbar-list>
+ <a class="navbar-user-info navbar-blog" href="https://i.cnblogs.com/EditPosts.aspx?opt=1" alt=写随笔 title=写随笔 style=display:none>
+ 
+ </a>
+ <a id=navblog-myblog-icon class="navbar-user-info navbar-blog" href=https://passport.cnblogs.com/GetBlogApplyStatus.aspx alt=我的博客 title=我的博客 style=display:none>
+ 
+ </a>
+ <a class="navbar-user-info navbar-message navbar-icon-wrapper" href=https://msg.cnblogs.com/ alt=短消息 title=短消息 style=display:none>
+ 
+ 
+ </a>
+ <a id=navbar_lite_mode_indicator data-current-page=blog style=display:none alt=简洁模式 title=简洁模式启用，您在访问他人博客时会使用简洁款皮肤展示>
+ 
+ </a>
+ <div id=user_info class="navbar-user-info dropdown" style=display:none>
+ 
+ 
+ </div>
+ <a class=navbar-anonymous href=https://account.cnblogs.com/signup style=display:inline>注册</a>
+ <a class=navbar-anonymous style=display:inline>登录</a>
+ </li>
+ </ul>
+ </nav>
+ </div>
+ 
+ 
+<div id=home>
+<div id=header>
+ <div id=blogTitle>
+ <a id=lnkBlogLogo href=https://www.cnblogs.com/jerry323/><img id=blogLogo src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" alt=返回主页></a> 
+ 
+<h1><a id=Header1_HeaderTitle class="headermaintitle HeaderMainTitle" href=https://www.cnblogs.com/jerry323/>自由 分享 合作</a>
+</h1>
+<h2>beyond limit</h2>
+ 
+ </div>
+ <div id=navigator>
+ 
+<ul id=navList>
+<li><a id=blog_nav_sitehome class=menu href=https://www.cnblogs.com/>
+博客园</a>
+</li>
+<li>
+<a id=blog_nav_myhome class=menu href=https://www.cnblogs.com/jerry323/>
+首页</a>
+</li>
+<li>
+<a id=blog_nav_newpost class=menu href="https://i.cnblogs.com/EditPosts.aspx?opt=1">
+新随笔</a>
+</li>
+<li>
+<a id=blog_nav_contact class=menu href=https://msg.cnblogs.com/send/bbings>
+联系</a></li>
+<li>
+</li>
+<li>
+<a id=blog_nav_admin class=menu href=https://i.cnblogs.com/>
+管理</a>
+</li>
+</ul>
+ <div class=blogStats>
+ <span id=stats_post_count>随笔 - 38&nbsp; </span>
+<span id=stats_article_count>文章 - 8&nbsp; </span>
+<span id=stats-comment_count>评论 - 3&nbsp; </span>
+<span id=stats-total-view-count>阅读 - 
+<span title="总阅读数: 70532">
+70532</span></span>
+ </div>
+ </div>
+</div>
+<div id=main>
+ <div id=mainContent>
+ <div class=forFlow>
+ <div id=post_detail>
+ 
+ <div id=topics>
+ <div class=post>
+ <h1 class=postTitle>
+ 
+<a id=cb_post_title_url class="postTitle2 vertical-middle" href=https://www.cnblogs.com/jerry323/p/9097264.html>
+ <span role=heading aria-level=2>Eigen实现坐标转换</span>
+ 
+</a>
+ </h1>
+ <div class=clear></div>
+ <div class=postBody>
+ <div id=cnblogs_post_body class="blogpost-body cnblogs-markdown">
+<blockquote>
+<p>（《视觉SLAM十四讲》第三讲习题7）设有小萝卜一号和二号在世界坐标系中。一号位姿q1 = [0.35, 0.2, 0.3, 0.1]，t1=[0.3, 0.1, 0.1]。二号位姿q2=[-0.5, 0.4, -0.1, 0.2], t2=[-0.1, 0.5, 0.3].某点在一号坐标系下坐标为p=[0.5, 0, 0.2].求p在二号坐标系下的坐标</p>
+</blockquote>
+<p>假设在世界坐标系中p点的坐标为P。</p>
+<p>用四元数做旋转则有（在Eigen中四元数旋转为q×v，数学中则为q×v×q^-1）：</p>
+<ul>
+<li>q1 × P + t1 = p1</li>
+<li>q2 × P + t2 = p2</li>
+</ul>
+<p>由上两式分别解算出：</p>
+<ul>
+<li>P = q1^-1 × (p1 - t1)</li>
+<li>P = q2^-1 × (p2 - t2)</li>
+</ul>
+<p>两式联立求解则得到：</p>
+<p>p2 = q2 × q1^-1 × (p1 - t1) + t2</p>
+<p>如果用欧拉矩阵（设一号欧拉矩阵为T1，二号欧拉矩阵为T2）则有：</p>
+<ul>
+<li>p1 = T1 × P</li>
+<li>p2 = T2 × P</li>
+</ul>
+<p>求解P：</p>
+<ul>
+<li>P = T1^-1 × p1</li>
+<li>P = T2^-1 × p2</li>
+</ul>
+<p>联立求解则有：</p>
+<p>p2 = T2 × T1^-1 × p1</p>
+<p>以下则是用Eigen实现的代码：</p>
+<pre class=highlighter-hljs highlighted=true><code class="language-c++ highlighter-hljs hljs language-c"><span class=hljs-meta>#<span class=hljs-keyword>include</span> <span class=hljs-string>&lt;iostream&gt;</span></span>
+
+using namespace <span class=hljs-built_in>std</span>;
+
+<span class=hljs-meta>#<span class=hljs-keyword>include</span> <span class=hljs-string>&lt;eigen3/Eigen/Core&gt;</span></span>
+<span class=hljs-meta>#<span class=hljs-keyword>include</span> <span class=hljs-string>&lt;eigen3/Eigen/Geometry&gt;</span></span>
+
+<span class=hljs-type>int</span> <span class="hljs-title function_">main</span><span class=hljs-params>()</span>
+{
+    <span class=hljs-comment>//四元数</span>
+    Eigen::Quaterniond q1 = Eigen::Quaterniond(<span class=hljs-number>0.35</span>, <span class=hljs-number>0.2</span>, <span class=hljs-number>0.3</span>, <span class=hljs-number>0.1</span>).normalized();
+    Eigen::Quaterniond q2 = Eigen::Quaterniond(<span class=hljs-number>-0.5</span>, <span class=hljs-number>0.4</span>, <span class=hljs-number>-0.1</span>, <span class=hljs-number>0.2</span>).normalized();
+    <span class=hljs-comment>//平移向量</span>
+    Eigen::Vector3d t1 = Eigen::Vector3d(<span class=hljs-number>0.3</span>, <span class=hljs-number>0.1</span>, <span class=hljs-number>0.1</span>);
+    Eigen::Vector3d t2 = Eigen::Vector3d(<span class=hljs-number>-0.1</span>, <span class=hljs-number>0.5</span>, <span class=hljs-number>0.3</span>);
+    <span class=hljs-comment>//目标向量</span>
+    Eigen::Vector3d p1 = Eigen::Vector3d(<span class=hljs-number>0.5</span>, <span class=hljs-number>0</span>, <span class=hljs-number>0.2</span>);
+    Eigen::Vector3d p2;
+
+    <span class=hljs-comment>//打印输出</span>
+    <span class=hljs-comment>// cout &lt;&lt; q1.coeffs() &lt;&lt; "\n"</span>
+    <span class=hljs-comment>//      &lt;&lt; q2.coeffs() &lt;&lt; "\n"</span>
+    <span class=hljs-comment>//      &lt;&lt; t1.transpose() &lt;&lt; "\n"</span>
+    <span class=hljs-comment>//      &lt;&lt; t2.transpose() &lt;&lt; endl;</span>
+
+    <span class=hljs-comment>//四元数求解</span>
+    p2 = q2 * q1.inverse() * (p1 - t1) + t2;
+    <span class=hljs-built_in>cout</span> &lt;&lt; p2.transpose() &lt;&lt; <span class=hljs-built_in>endl</span>;
+
+    <span class=hljs-comment>//欧拉矩阵</span>
+    Eigen::Isometry3d T1 = Eigen::Isometry3d::Identity();
+    Eigen::Isometry3d T2 = Eigen::Isometry3d::Identity();
+    T1.rotate(q1.toRotationMatrix());
+    T1.pretranslate(t1);
+    T2.rotate(q2.toRotationMatrix());
+    T2.pretranslate(t2);
+    <span class=hljs-comment>// cout &lt;&lt; T1.matrix() &lt;&lt; endl;</span>
+    <span class=hljs-comment>// cout &lt;&lt; T2.matrix() &lt;&lt; endl;</span>
+
+    <span class=hljs-comment>//欧拉矩阵求解</span>
+    p2 = T2 * T1.inverse() * p1;
+    <span class=hljs-built_in>cout</span> &lt;&lt; p2.transpose() &lt;&lt; <span class=hljs-built_in>endl</span>;
+}
+</code></pre>
+</div>
+<div id=MySignature role=contentinfo>
+ 分享自由，尊重著作权
+</div>
+<div class=clear></div>
+<div id=blog_post_info_block role=contentinfo>
+<div id=BlogPostCategory>
+ 分类: 
+ <a href=https://www.cnblogs.com/jerry323/category/1185283.html target=_blank>教程</a>
+, <a href=https://www.cnblogs.com/jerry323/category/1185284.html target=_blank>C/C++</a>
+</div>
+ <div id=blog_post_info>
+<div id=green_channel>
+ <a id=green_channel_digg>好文要顶</a>
+ <a id=green_channel_follow>关注我</a>
+ <a id=green_channel_favorite>收藏该文</a>
+ <a id=green_channel_weibo title=分享至新浪微博><img src=data:image/png;base64,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 alt></a>
+ <a id=green_channel_wechat title=分享至微信><img src=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAAAAlwSFlzAAALEwAACxMBAJqcGAAABA9pVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IlhNUCBDb3JlIDUuNC4wIj4KICAgPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICAgICAgPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIKICAgICAgICAgICAgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iCiAgICAgICAgICAgIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIgogICAgICAgICAgICB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iCiAgICAgICAgICAgIHhtbG5zOnRpZmY9Imh0dHA6Ly9ucy5hZG9iZS5jb20vdGlmZi8xLjAvIj4KICAgICAgICAgPHhtcE1NOkRlcml2ZWRGcm9tIHJkZjpwYXJzZVR5cGU9IlJlc291cmNlIj4KICAgICAgICAgICAgPHN0UmVmOmluc3RhbmNlSUQ+eG1wLmlpZDo0RUREMkQ4M0Q4REUxMUUzQkU2QUFFRDI0NThBOTQxQTwvc3RSZWY6aW5zdGFuY2VJRD4KICAgICAgICAgICAgPHN0UmVmOmRvY3VtZW50SUQ+eG1wLmRpZDo0RUREMkQ4NEQ4REUxMUUzQkU2QUFFRDI0NThBOTQxQTwvc3RSZWY6ZG9jdW1lbnRJRD4KICAgICAgICAgPC94bXBNTTpEZXJpdmVkRnJvbT4KICAgICAgICAgPHhtcE1NOkRvY3VtZW50SUQ+eG1wLmRpZDo0RUREMkQ4NkQ4REUxMUUzQkU2QUFFRDI0NThBOTQxQTwveG1wTU06RG9jdW1lbnRJRD4KICAgICAgICAgPHhtcE1NOkluc3RhbmNlSUQ+eG1wLmlpZDo0RUREMkQ4NUQ4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 alt></a>
+</div>
+<div id=author_profile>
+ <div id=author_profile_info class=author_profile_info>
+ <a href=https://home.cnblogs.com/u/jerry323/ target=_blank><img src=data:image/png;base64,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 class=author_avatar alt></a>
+ <div id=author_profile_detail class=author_profile_info>
+ <a href=https://home.cnblogs.com/u/jerry323/>bbings</a>
+ <br>
+ <a href=https://home.cnblogs.com/u/jerry323/followers/>粉丝 - <span class=follower-count>4</span></a>
+ <a href=https://home.cnblogs.com/u/jerry323/followees/>关注 - <span class=following-count>3</span></a><br>
+ </div>
+ </div>
+ <div class=clear></div>
+ <div id=author_profile_honor></div>
+ <div id=author_profile_follow class=follow-tip>
+ <a>+加关注</a>
+ </div>
+</div>
+<div id=div_digg>
+ <div class=diggit>
+ <span class=diggnum id=digg_count>0</span>
+ </div>
+ <div class=buryit>
+ <span class=burynum id=bury_count>0</span>
+ </div>
+ <div class=clear></div>
+ <div class=diggword id=digg_tips>
+ </div>
+</div>
+</div>
+ <div class=clear></div>
+ <div id=post_next_prev>
+ <a href=https://www.cnblogs.com/jerry323/p/8994607.html class=p_n_p_prefix>« </a> 上一篇： <a href=https://www.cnblogs.com/jerry323/p/8994607.html data-featured-image title="发布于 2018-05-05 14:16">处理视频流时可能出现的重复帧问题及解决办法</a>
+ <br>
+ <a href=https://www.cnblogs.com/jerry323/p/9163364.html class=p_n_p_prefix>» </a> 下一篇： <a href=https://www.cnblogs.com/jerry323/p/9163364.html data-featured-image title="发布于 2018-06-10 15:22">数据衰减的一些方法和比较</a>
+</div>
+</div>
+ </div>
+ <div class=postDesc>posted @ 
+<span id=post-date data-last-update-days=1827.8087743185279 data-date-created=BlogServer.Application.Dto.BlogPost.BlogPostDto data-date-updated="2018-05-27 20:34" aria-expanded=false>2018-05-27 20:34</span>&nbsp;
+<a href=https://www.cnblogs.com/jerry323/>bbings</a>&nbsp;
+阅读(<span id=post_view_count>8965</span>)&nbsp;
+评论(<span id=post_comment_count>0</span>)&nbsp;
+<a href="https://i.cnblogs.com/EditPosts.aspx?postid=9097264" rel=nofollow>编辑</a>&nbsp;
+<a>收藏</a>&nbsp;
+<a>举报</a>
+</div>
+ </div>
+ 
+ 
+ </div>
+</div>
+<a id=!comments></a>
+<div id=blog-comments-placeholder class=sf-hidden></div>
+<div id=comment_form class=commentform>
+ <a name=commentform></a>
+ <div id=divCommentShow></div>
+ <div id=comment_nav><span id=span_refresh_tips></span><a id=lnk_RefreshComments runat=server clientidmode=Static>刷新评论</a><a href=#>刷新页面</a><a href=#top>返回顶部</a></div>
+ <div id=comment_form_container style=visibility:visible><div class=login_tips>
+ 登录后才能查看或发表评论，立即 <a rel=nofollow class=underline>登录</a> 或者
+ <a href=https://www.cnblogs.com/>逛逛</a> 博客园首页
+</div>
+</div>
+ <div class=ad_text_commentbox id=ad_text_under_commentbox></div>
+ <div id=cnblogs_ch class=sf-hidden></div>
+ <div id=opt_under_post></div>
+ <div id=cnblogs_c1 class="under-post-card sf-hidden">
+ 
+ </div>
+ <div id=under_post_card1><div class=under-post-card>
+<b>编辑推荐：</b>
+<br>
+· <a href=https://www.cnblogs.com/wlovet/p/17426339.html target=_blank>秒杀系统常见问题—库存超卖</a>
+ <br>
+· <a href=https://www.cnblogs.com/coco1s/p/17430324.html target=_blank>现代 CSS 解决方案：CSS 原生支持的三角函数 </a>
+ <br>
+· <a href=https://www.cnblogs.com/dragonir/p/17430114.html target=_blank>Three.js 进阶之旅：滚动控制模型动画和相机动画</a>
+ <br>
+· <a href=https://www.cnblogs.com/eryuan/p/17430377.html target=_blank>SQL 优化实战分享</a>
+ <br>
+· <a href=https://www.cnblogs.com/makemylife/p/17425593.html target=_blank>分页列表缓存，你真的会吗</a>
+ <br>
+</div></div>
+ <div id=under_post_card2><div class="itnews under-post-card">
+ <b>即构专区：</b>
+ <br>
+ · <a href=https://brands.cnblogs.com/zego/p/15696 target=_blank>在映客的虚拟KTV里唱了一首“爱你”</a>
+ <br>
+ · <a href=https://brands.cnblogs.com/zego/p/15697 target=_blank>端午“沉浸式云旅游”怎么玩？即构助力“直播+”新场景落地</a>
+ <br>
+ · <a href=https://brands.cnblogs.com/zego/p/15719 target=_blank>音视频开发进阶｜第六讲：色彩和色彩空间·下篇</a>
+ <br>
+ · <a href=https://brands.cnblogs.com/zego/p/15519 target=_blank>WebRTC服务端工程实践和优化探索</a>
+ <br>
+ · <a href=https://brands.cnblogs.com/zego/p/15648 target=_blank>即构低延迟直播产品L3，打造更优质的实时互动体验</a>
+ <br>
+</div></div>
+ <div id=HistoryToday class=under-post-card></div>
+ 
+</div>
+ </div>
+ </div>
+ <div id=sideBar>
+ <div id=sideBarMain>
+ 
+<div id=sidebar_c3 class=sf-hidden></div>
+ <div id=blog-calendar style=display:none></div> 
+ <div id=leftcontentcontainer>
+ <div id=blog-sidecolumn>
+<div id=sidebar_search class=sidebar-block>
+ 
+</div>
+<div id=sidebar_toptags class=sidebar-block><div class=catListTag>
+ <h3 class=catListTitle><a href=https://www.cnblogs.com/jerry323/tag/ class=sidebar-card-title-a>我的标签</a></h3>
+<ul>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/tag/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/>数据结构<span class=tag-count>(6)</span></a>
+ </li>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/tag/C%2B%2B/>C++<span class=tag-count>(5)</span></a>
+ </li>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/tag/%E5%B7%A5%E5%85%B7/>工具<span class=tag-count>(4)</span></a>
+ </li>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/tag/C%2B%2B11/>C++11<span class=tag-count>(2)</span></a>
+ </li>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/tag/Python/>Python<span class=tag-count>(2)</span></a>
+ </li>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/tag/%E6%A0%88/>栈<span class=tag-count>(2)</span></a>
+ </li>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/tag/%E6%8A%BD%E8%B1%A1%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/>抽象工厂模式<span class=tag-count>(1)</span></a>
+ </li>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/tag/%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F/>单例模式<span class=tag-count>(1)</span></a>
+ </li>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/tag/%E9%A5%BF%E6%B1%89%E6%A8%A1%E5%BC%8F/>饿汉模式<span class=tag-count>(1)</span></a>
+ </li>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/tag/%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/>工厂模式<span class=tag-count>(1)</span></a>
+ </li>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/tag/%E5%BB%BA%E9%80%A0%E8%80%85%E6%A8%A1%E5%BC%8F/>建造者模式<span class=tag-count>(1)</span></a>
+ </li>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/tag/git/>git<span class=tag-count>(1)</span></a>
+ </li>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/tag/docker/>docker<span class=tag-count>(1)</span></a>
+ </li>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/tag/debug/>debug<span class=tag-count>(1)</span></a>
+ </li>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/tag/linux/>linux<span class=tag-count>(1)</span></a>
+ </li>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/tag/>更多</a>
+ </li>
+</ul>
+</div>
+</div>
+<div id=sidebar_categories>
+ <div id=sidebar_postcategory class="catListPostCategory sidebar-block">
+ <h3 class=catListTitle>
+ 
+ <a class=sidebar-card-title-a href=https://www.cnblogs.com/jerry323/post-categories>随笔分类</a>
+<span class=sidebar-category-item-count>
+ (83)
+</span>
+ </h3>
+ <ul>
+ <li data-category-list-item-visible=true style=display:block>
+ 
+<a href=https://www.cnblogs.com/jerry323/category/1185284.html style=--cnb-category-item-link-indent-size:calc(0*1em) class=category-item-link rel target>C/C++(20)</a>
+ 
+ </li> 
+ <li data-category-list-item-visible=true style=display:block>
+ 
+<a href=https://www.cnblogs.com/jerry323/category/1185289.html style=--cnb-category-item-link-indent-size:calc(0*1em) class=category-item-link rel target>Python(6)</a>
+ 
+ </li> 
+ <li data-category-list-item-visible=true style=display:block>
+ 
+<a href=https://www.cnblogs.com/jerry323/category/1185725.html style=--cnb-category-item-link-indent-size:calc(0*1em) class=category-item-link rel target>tips(6)</a>
+ 
+ </li> 
+ <li data-category-list-item-visible=true style=display:block>
+ 
+<a href=https://www.cnblogs.com/jerry323/category/1274860.html style=--cnb-category-item-link-indent-size:calc(0*1em) class=category-item-link rel target>工具(15)</a>
+ 
+ </li> 
+ <li data-category-list-item-visible=true style=display:block>
+ 
+<a href=https://www.cnblogs.com/jerry323/category/1185288.html style=--cnb-category-item-link-indent-size:calc(0*1em) class=category-item-link rel target>后台(2)</a>
+ 
+ </li> 
+ <li data-category-list-item-visible=true style=display:block>
+ 
+<a href=https://www.cnblogs.com/jerry323/category/1247033.html style=--cnb-category-item-link-indent-size:calc(0*1em) class=category-item-link rel target>计算机视觉(3)</a>
+ 
+ </li> 
+ <li data-category-list-item-visible=true style=display:block>
+ 
+<a href=https://www.cnblogs.com/jerry323/category/1185283.html style=--cnb-category-item-link-indent-size:calc(0*1em) class=category-item-link rel target>教程(14)</a>
+ 
+ </li> 
+ <li data-category-list-item-visible=true style=display:block>
+ 
+<a href=https://www.cnblogs.com/jerry323/category/1185290.html style=--cnb-category-item-link-indent-size:calc(0*1em) class=category-item-link rel target>算法(17)</a>
+ 
+ </li> 
+ 
+ </ul>
+ </div> 
+ <div id=sidebar_postarchive class="catListPostArchive sidebar-block">
+ <h3 class=catListTitle>
+ 
+随笔档案<span class=sidebar-category-item-count>
+ (38)
+</span>
+ </h3>
+ <ul>
+ <li data-category-list-item-visible=true style=display:block>
+ 
+<a href=https://www.cnblogs.com/jerry323/archive/2021/05.html style=--cnb-category-item-link-indent-size:calc(0*1em) class=category-item-link rel target>2021年5月(1)</a>
+ 
+ </li> 
+ <li data-category-list-item-visible=true style=display:block>
+ 
+<a href=https://www.cnblogs.com/jerry323/archive/2021/03.html style=--cnb-category-item-link-indent-size:calc(0*1em) class=category-item-link rel target>2021年3月(3)</a>
+ 
+ </li> 
+ <li data-category-list-item-visible=true style=display:block>
+ 
+<a href=https://www.cnblogs.com/jerry323/archive/2021/02.html style=--cnb-category-item-link-indent-size:calc(0*1em) class=category-item-link rel target>2021年2月(3)</a>
+ 
+ </li> 
+ <li data-category-list-item-visible=true style=display:block>
+ 
+<a href=https://www.cnblogs.com/jerry323/archive/2021/01.html style=--cnb-category-item-link-indent-size:calc(0*1em) class=category-item-link rel target>2021年1月(3)</a>
+ 
+ </li> 
+ <li data-category-list-item-visible=true style=display:block>
+ 
+<a href=https://www.cnblogs.com/jerry323/archive/2020/04.html style=--cnb-category-item-link-indent-size:calc(0*1em) class=category-item-link rel target>2020年4月(9)</a>
+ 
+ </li> 
+ <li data-category-list-item-visible=true style=display:block>
+ 
+<a href=https://www.cnblogs.com/jerry323/archive/2019/01.html style=--cnb-category-item-link-indent-size:calc(0*1em) class=category-item-link rel target>2019年1月(2)</a>
+ 
+ </li> 
+ <li data-category-list-item-visible=true style=display:block>
+ 
+<a href=https://www.cnblogs.com/jerry323/archive/2018/09.html style=--cnb-category-item-link-indent-size:calc(0*1em) class=category-item-link rel target>2018年9月(3)</a>
+ 
+ </li> 
+ <li data-category-list-item-visible=true style=display:block>
+ 
+<a href=https://www.cnblogs.com/jerry323/archive/2018/08.html style=--cnb-category-item-link-indent-size:calc(0*1em) class=category-item-link rel target>2018年8月(5)</a>
+ 
+ </li> 
+ <li data-category-list-item-visible=true style=display:block>
+ 
+<a href=https://www.cnblogs.com/jerry323/archive/2018/07.html style=--cnb-category-item-link-indent-size:calc(0*1em) class=category-item-link rel target>2018年7月(1)</a>
+ 
+ </li> 
+ <li data-category-list-item-visible=true style=display:block>
+ 
+<a href=https://www.cnblogs.com/jerry323/archive/2018/06.html style=--cnb-category-item-link-indent-size:calc(0*1em) class=category-item-link rel target>2018年6月(2)</a>
+ 
+ </li> 
+ <li data-category-list-item-visible=true style=display:block>
+ 
+<a href=https://www.cnblogs.com/jerry323/archive/2018/05.html style=--cnb-category-item-link-indent-size:calc(0*1em) class=category-item-link rel target>2018年5月(2)</a>
+ 
+ </li> 
+ <li data-category-list-item-visible=true style=display:block>
+ 
+<a href=https://www.cnblogs.com/jerry323/archive/2018/03.html style=--cnb-category-item-link-indent-size:calc(0*1em) class=category-item-link rel target>2018年3月(4)</a>
+ 
+ </li> 
+ 
+ </ul>
+ </div> 
+</div>
+<div id=sidebar_topviewedposts class=sidebar-block><div class=catListView>
+ <h3 class=catListTitle>
+ <a href=https://www.cnblogs.com/jerry323/most-viewed class=sidebar-card-title-a>
+ 阅读排行榜
+</a>
+ </h3>
+ <div id=TopViewPostsBlock>
+ <ul style=word-break:break-all>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/p/9174859.html>
+ 1. VSCode中C/C++库文件的配置(34504)
+ </a>
+ </li>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/p/9097264.html>
+ 2. Eigen实现坐标转换(8965)
+ </a>
+ </li>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/p/8640678.html>
+ 3. C/C++反三角函数使用注意(4689)
+ </a>
+ </li>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/p/8645411.html>
+ 4. shell脚本中cd命令无效(4096)
+ </a>
+ </li>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/p/9664611.html>
+ 5. 高精度乘法--C++(3397)
+ </a>
+ </li>
+ </ul>
+ </div>
+</div></div>
+<div id=sidebar_topcommentedposts class=sidebar-block><div class=catListFeedback>
+ <h3 class=catListTitle>
+ <a href=https://www.cnblogs.com/jerry323/most-commented class=sidebar-card-title-a>评论排行榜</a>
+ </h3>
+ <div id=TopFeedbackPostsBlock>
+ <ul style=word-break:break-all>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/p/8645411.html>
+ 1. shell脚本中cd命令无效(2)
+ </a>
+ </li>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/p/9174859.html>
+ 2. VSCode中C/C++库文件的配置(1)
+ </a>
+ </li>
+ </ul>
+ </div>
+</div></div>
+<div id=sidebar_topdiggedposts class=sidebar-block>
+<div id=topdigg_posts_wrap>
+ <div class=catListView>
+ <h3 class=catListTitle>
+ <a href=https://www.cnblogs.com/jerry323/most-liked class=sidebar-card-title-a>推荐排行榜</a>
+ </h3>
+ <div id=TopDiggPostsBlock>
+ <ul style=word-break:break-all>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/p/9174859.html>
+ 1. VSCode中C/C++库文件的配置(4)
+ </a>
+ </li>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/p/8640719.html>
+ 2. 若干排序算法的Python实现方法及原理(1)
+ </a>
+ </li>
+ <li>
+ <a href=https://www.cnblogs.com/jerry323/p/8640678.html>
+ 3. C/C++反三角函数使用注意(1)
+ </a>
+ </li>
+ </ul>
+ </div>
+ </div>
+</div></div><div id=sidebar_recentcomments class=sidebar-block><div class=catListComment>
+<h3 class=catListTitle><a href=https://www.cnblogs.com/jerry323/comments class=sidebar-card-title-a>最新评论</a></h3>
+ <div class=RecentCommentBlock>
+ <ul>
+ <li class=recent_comment_title><a href=https://www.cnblogs.com/jerry323/p/8645411.html>1. Re:shell脚本中cd命令无效</a></li>
+ <li class=recent_comment_body>@清蒸鱼跃龙门 你没解释脚本里的"cd .."为啥无效? 因为直接执行脚本时, 脚本里的每一条语句都会重开一个进程执行, 所以进程的环境变量不共享, 所以这时候cd时无效的. 这里cd无效是指对当前进...</li>
+ <li class=recent_comment_author>--bbings</li>
+ <li class=recent_comment_title><a href=https://www.cnblogs.com/jerry323/p/8645411.html>2. Re:shell脚本中cd命令无效</a></li>
+ <li class=recent_comment_body><p>". ./test.sh"是什么意思呢，你没解释脚本里的"cd .."为啥无效啊</p>
+</li>
+ <li class=recent_comment_author>--清蒸鱼跃龙门</li>
+ <li class=recent_comment_title><a href=https://www.cnblogs.com/jerry323/p/9174859.html>3. Re:VSCode中C/C++库文件的配置</a></li>
+ <li class=recent_comment_body>请问不用再设置依赖库吗？ 比如opencv_***.lib</li>
+ <li class=recent_comment_author>--merria28</li>
+ </ul>
+ </div>
+</div>
+</div>
+</div>
+ 
+ </div> 
+ </div>
+ </div>
+ <div class=clear></div>
+ </div>
+ <div class=clear></div>
+ <div id=footer>
+ 
+Copyright © 2023 bbings
+<br><span id=poweredby>Powered by .NET 7.0 on Kubernetes</span>
+ </div>
+</div>
+ 
+ 
+ 
+<div id=sc-translator-shadow style=all:initial><template shadowroot=open><style>.iconfont{font-size:16px;width:1em;height:1em;vertical-align:middle;fill:currentColor;overflow:hidden}.translate-button{user-select:none;border-radius:3px;box-shadow:0px 0px 4px -1px rgba(0,0,0,.88);color:var(--text-normal);background:var(--bg-content);position:fixed;z-index:2147483647}.panel-icon-btn{display:inline-flex;align-items:center;justify-content:center;user-select:none;position:relative;padding:3px;cursor:pointer;--ripple-max-opa:0.16}.panel-icon-btn:not(.panel-icon-btn--disabled):hover .ripple::before{opacity:0.08}.panel-icon-btn.panel-icon-btn--activation .ripple::after{animation:mdc-ripple-fg-radius-in 225ms forwards,mdc-ripple-fg-opacity-in 75ms forwards}.panel-icon-btn.panel-icon-btn--deactivation .ripple::after{animation:mdc-ripple-fg-opacity-out 150ms;transform:scale(1.8)}.panel-icon-btn.panel-icon-btn--disabled{cursor:default}.panel-icon-btn .iconfont{pointer-events:none;opacity:0.8}.panel-icon-btn.panel-icon-btn--disabled .iconfont,.panel-icon-btn.panel-icon-btn--icon-grey .iconfont{opacity:0.4}.history{font-size:13px;z-index:2147483647;user-select:none;position:fixed;top:0px;left:-1px;height:100%;width:200px;background:var(--bg-content);color:var(--text-normal);transform:translate3d(-100%,0px,0px);transition:transform 0.2s ease 0s;padding-top:40px}.history--show{transform:translate3d(0px,0px,0px);transition:transform 0.3s ease-in 0s}.history--show .history__unfold{opacity:0;right:10px;pointer-events:none;transition:right 0s ease 0s,opacity 0s ease 0s}.history__unfold{opacity:1;position:fixed;top:30%;right:-25px;width:25px;border-radius:0px 5px 5px 0px;word-break:break-all;border:1px #999 solid;font-size:16px;text-align:center;padding:10px 2px;cursor:pointer;user-select:none;background-color:#fff;box-shadow:rgba(182,187,179,0.6) 1px 1px 1px 1px;transition:right 0.25s ease-in 0.2s,opacity 0.35s ease-in 0.2s;color:#000}.history__unfold .history__unfold-text{display:inline-block;font-size:12px;transform:rotate(-180deg);writing-mode:tb-rl;font-weight:bold}.history__head{position:absolute;top:0px;left:0px;color:var(--text-icon);width:100%;background:var(--bg-total);padding:0 5px;display:flex;height:40px;justify-content:space-between;align-items:center}.history__content{overflow-y:auto;height:100%;width:100%;border-right:1px solid var(--bg-total)}.history_no-record{margin:20px}.history-head__pin{margin-right:5px;color:var(--text-icon);opacity:0.6;cursor:pointer}.history-head__pin--ning{transform:rotate(-45deg);opacity:1}.history__e-resize{display:none;height:100%;position:absolute;width:6px;right:-2px;bottom:0}.history__e-resize:hover{cursor:e-resize}.history--show .history__e-resize{display:block}.favicon{vertical-align:bottom;user-select:none;display:inline-block;padding:0;width:20px;height:20px}.favicon--mock{justify-content:center;text-align:center;font-size:14px;border-radius:5px;color:#fff;background:#999;font-weight:bold}.favicon+span{margin-left:5px}.translate-result{padding:10px 0}.translate-result__item .iconfont{position:relative;bottom:.125em}.translate-result__item .iconfont:first-child{margin-left:5px}.translate-result__item+.translate-result__item{margin-block-start:0.8em}.translate-result__paragraph+.translate-result__paragraph{display:block;margin-top:0.625em}.history-result-panel{padding-left:10px;position:fixed}.history-result-panel__container{box-shadow:0px 0px 10px 0px rgba(0,0,0,0.5);padding:4px 4px 1px 4px;width:200px;background:var(--bg-total);border-radius:5px;user-select:text;max-height:calc(100vh - 45px);overflow-y:auto}.history-item{display:flex;width:100%;height:50px;overflow:hidden;font-size:14px}.history-item:hover{background:var(--bg-item-hover)}.history-item__content{color:var(--text-normal);padding-left:5px;flex:1;overflow:hidden;cursor:pointer;height:50px}.history-item__content-text,.history-item__content-result{height:25px;line-height:25px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.history-item__icons{justify-content:center;align-items:center;display:flex;width:30px}.history-item__icons .iconfont{font-size:15px!important}.logo{height:1em;width:1em;vertical-align:bottom}.mt-result{background:var(--bg-content);width:100%;margin-bottom:3px;word-break:break-all;border-radius:6px;padding:0px 10px}.mt-result__head{padding:2px 0px;color:var(--text-normal);font-size:14px}.mt-result__head__left{display:grid;grid-template-columns:auto max-content max-content;align-items:center}.mt-result__head-icons{margin-right:5px}.mt-result__head__badge{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.select-options{position:absolute;background:var(--bg-content);color:var(--text-normal);box-shadow:0px 0px 10px 0px rgba(0,0,0,0.5);overflow-y:auto;overflow-x:hidden;max-height:300px;z-index:999;width:auto;max-width:240px;border-radius:6px}.add-source{position:relative;text-align:right;margin-right:5px;margin-bottom:2px;font-size:14px}.add-source__wrapper{display:inline-flex;position:relative}.add-source__badge{color:var(--text-icon);font-size:18px}.source-selector__item{padding:6px;display:flex;justify-content:space-between}.source-selector__item:hover{background:var(--bg-item-hover)}.source-selector__item-source{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.language-select{position:relative;text-align:start;align-items:center;cursor:default;vertical-align:middle;user-select:none;outline:0;white-space:pre;padding:2px 3px}.language-select__badge{display:flex;align-items:center}.language-select__badge-text{margin-right:8px;flex:1;overflow:hidden}.language-select__search{display:flex;margin:5px;border-bottom:1px solid currentColor;align-items:center;padding:5px}.language-select__search-input{flex:1}.language-select__search-input>input{outline:0;border:0;width:100%}.language-select__option,.language-select__no-result{padding:4px 6px;line-height:1}.language-select__option:hover{background:var(--bg-item-hover)}.language-selection{margin:5px;text-align:center}.language-selection>.iconfont{cursor:pointer;margin:0 5px}.language-selection__select{position:relative;width:100px;display:inline-block}.raw-text__textarea{border:none;font-size:1em;display:block;width:100%;height:44px;padding:3px 8px;resize:vertical;min-width:100px;min-height:38px;max-height:150px;border-radius:6px}.multiple-result{width:100%;overflow-y:auto}.multiple-result__add-source{word-break:break-all;padding:10px}.source-select{position:relative;text-align:start;align-items:center;display:inline-flex;cursor:default;vertical-align:middle;user-select:none;outline:0;white-space:pre;padding:2px 3px;max-width:150px}.source-select .iconfont{margin-left:4px}.source-select--disabled{color:rgb(170,170,170);opacity:0.7}.source-select__options{background:var(--bg-content);color:var(--text-normal);border-radius:5px}.source-select__value{flex:1;overflow:hidden}.source-select__options__option{padding:6px;overflow:hidden}.source-select__options__option:hover{background:var(--bg-item-hover)}.via{padding:0 10px}.via__content{font-size:14px!important;padding:2px 0;display:flex;align-items:center}.via__content-select .source-select__value{max-width:128px}.via__content-select:focus{background:var(--bg-select-focus)}.single-translation{background:var(--bg-content);border-radius:6px}.single-translation__translation{padding:0 10px;overflow-y:auto}.panel{border-radius:6px;color:var(--text-normal)!important;position:fixed;z-index:2147483647;width:250px;background-color:var(--bg-total);box-shadow:rgba(0,0,0,0.8) 0px 0px 10px 0px;min-width:250px}.panel__content{margin:0 5px 5px 5px}.panel__header{cursor:move;user-select:none;width:100%;padding:0 5px;color:var(--text-icon);height:30px}.panel__header-logo{font-weight:bold;font-size:20px}.panel__header-icons .iconfont{font-size:18px}*{box-sizing:border-box}#sc-translator-root{font-size:14px;line-height:initial!important}.button{cursor:pointer}.scrollbar::-webkit-scrollbar{width:4px}.scrollbar::-webkit-scrollbar-track{background:rgb(239,239,239);border-radius:2px}.scrollbar::-webkit-scrollbar-thumb{background:#bfbfbf;border-radius:20px}.scrollbar::-webkit-scrollbar-thumb:hover{background:#999}.iconbutton{opacity:0.7}.iconbutton:hover{opacity:1}.dividing-line{width:100%;height:1px;background:var(--text-normal);opacity:0.7;display:block}.span-link{cursor:pointer;text-decoration:underline}.span-link:hover{text-decoration:none}.flex-align-items-center{display:flex;align-items:center}.flex-justify-content-space-between{display:flex;justify-content:space-between}.skeleton::after{content:"Loading..."}.skeleton{height:100%;background-color:#eee;background-image:linear-gradient(90deg,#eee,#f5f5f5,#eee);background-size:200px 100%;background-repeat:no-repeat;border-radius:4px;display:block;line-height:1;width:100%;animation:shimmer 1.2s ease-in-out infinite;color:transparent}@keyframes shimmer{0%{background-position:-200px 0}100%{background-position:calc(200px + 100%)0}}.border-bottom-select::before{left:0;right:0;bottom:0;content:" ";position:absolute;transition:border-bottom-color 200ms cubic-bezier(0.4,0,0.2,1) 0ms;border-bottom:1px solid rgba(136,136,136,0.7);pointer-events:none}.border-bottom-select:hover::before{border-bottom-width:2px}.border-bottom-select:focus{background:var(--bg-select-focus)}.iconfont--enable{opacity:0.7;cursor:pointer}.iconfont--enable:hover{opacity:1}.iconfont--disable{opacity:0.4}.ripple{pointer-events:none;position:absolute;width:100%;height:100%;overflow:hidden;left:0;top:0;border-radius:4px}.ripple::before,.ripple::after{position:absolute;border-radius:50%;opacity:0;pointer-events:none;content:"";background-color:currentColor}.ripple::before{transition:opacity 15ms linear,background-color 15ms linear;z-index:1;top:calc(50% - 100%);left:calc(50% - 100%);width:200%;height:200%}.ripple::after{width:var(--ripple-size,100%);height:var(--ripple-size,100%);top:0;left:0}@keyframes mdc-ripple-fg-radius-in{from{animation-timing-function:cubic-bezier(0.4,0,0.2,1);transform:translate(var(--ripple-translate-start,0)) scale(var(--ripple-scale-start,0.3))}to{transform:translate(var(--ripple-translate-end,0)) scale(var(--ripple-scale-end,1.08))}}@keyframes mdc-ripple-fg-opacity-in{from{animation-timing-function:linear;opacity:0}to{opacity:var(--ripple-max-opa,0.12)}}@keyframes mdc-ripple-fg-opacity-out{from{animation-timing-function:linear;opacity:var(--ripple-max-opa,0.12)}to{opacity:0}}.web-page-translate{position:fixed;box-shadow:0px 0px 10px 0px rgba(0,0,0,0.5);right:10px;bottom:10px;padding:10px;border-radius:10px;color:var(--text-normal);background:var(--bg-content);z-index:2147483647}.web-page-translate__error{margin-bottom:10px;max-width:285px}.web-page-translate__content .panel-icon-btn>.iconfont{font-size:20px}.web-page-translate__content .panel-icon-btn:first-of-type{margin-left:5px}.web-page-translate__select{width:100px}</style><style class=sf-hidden>#sc-translator-root{--text-normal:rgba(102,102,102,1);--text-icon:rgba(51,51,51,1);--bg-content:rgba(255,255,255,1);--bg-total:rgba(238,238,238,1);--bg-item-hover:rgba(221,221,221,0.2);--bg-select-focus:rgba(221,221,221,1)}</style><style class=sf-hidden>#sc-translator-root{font-size:14px}</style><div style=all:initial><div id=sc-translator-root><div class=translate-button style=display:none;left:5px;top:5px></div><div class=history style=display:none;width:200px></div><div class=panel style=display:none;left:5px;top:5px;width:250px></div><div class=web-page-translate style=display:none></div></div></div></template></div><script data-template-shadow-root>(()=>{document.currentScript.remove();processNode(document);function processNode(node){node.querySelectorAll("template[shadowroot]").forEach(element=>{let shadowRoot = element.parentElement.shadowRoot;if (!shadowRoot) {try {shadowRoot=element.parentElement.attachShadow({mode:element.getAttribute("shadowroot")});shadowRoot.innerHTML=element.innerHTML;element.remove()} catch (error) {} if (shadowRoot) {processNode(shadowRoot)}}})}})()</script>
